@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MPH United — PO System v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f2ede6; --bg2: #e8e1d8; --ink: #1a1612; --ink2: #4a4540;
+  --gold: #b8860b; --gold2: #d4a017; --rust: #8b3a0f; --cream: #faf7f2;
+  --green: #2d6a4f; --border: rgba(26,22,18,0.12); --shadow: 0 2px 12px rgba(26,22,18,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh; }
+
+.topbar { background: var(--ink); color: var(--bg); padding: 0 40px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+.topbar-brand { display: flex; align-items: center; gap: 12px; }
+.topbar-logo { width: 32px; height: 32px; background: var(--gold2); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 11px; color: var(--ink); }
+.topbar-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+.topbar-module { font-size: 11px; color: rgba(242,237,230,0.5); letter-spacing: 1px; text-transform: uppercase; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 12px; color: rgba(242,237,230,0.6); }
+.topbar-stat { display: flex; align-items: center; gap: 6px; }
+.topbar-stat span { color: var(--gold2); font-weight: 600; }
+
+.layout { display: grid; grid-template-columns: 390px 1fr; min-height: calc(100vh - 56px); }
+
+/* SIDEBAR */
+.sidebar { background: var(--cream); border-right: 1px solid var(--border); padding: 24px 22px; overflow-y: auto; }
+
+/* Paste box */
+
+.paste-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.ai-badge { background: var(--gold); color: white; border-radius: 4px; padding: 2px 6px; font-size: 9px; }
+
+
+
+.btn-parse { width: 100%; background: var(--gold); color: white; border: none; border-radius: 7px; padding: 10px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; margin-top: 9px; transition: all 0.2s; }
+.btn-parse:hover { background: var(--gold2); color: var(--ink); }
+.btn-parse:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.divider { display: flex; align-items: center; gap: 10px; margin: 14px 0; font-size: 10px; color: var(--ink2); letter-spacing: 1px; text-transform: uppercase; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.sec-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.form-section { margin-bottom: 16px; }
+
+.field { margin-bottom: 10px; }
+.field label { display: block; font-size: 10px; font-weight: 600; color: var(--ink2); letter-spacing: 0.5px; margin-bottom: 4px; text-transform: uppercase; }
+.field input, .field select, .field textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,134,11,0.1); }
+.field textarea { min-height: 52px; resize: vertical; line-height: 1.5; font-size: 12px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+/* Customer search */
+.customer-search-wrap { position: relative; }
+.customer-search-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s; }
+.customer-search-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,134,11,0.1); }
+.customer-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--border); border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 8px 24px rgba(26,22,18,0.12); display: none; }
+.customer-dropdown.open { display: block; }
+.customer-option { padding: 9px 12px; font-size: 12.5px; cursor: pointer; border-bottom: 1px solid rgba(26,22,18,0.05); transition: background 0.1s; }
+.customer-option:hover, .customer-option.highlighted { background: rgba(184,134,11,0.08); }
+.customer-option .opt-sub { font-size: 10px; color: var(--ink2); margin-top: 2px; font-family: 'IBM Plex Mono', monospace; }
+.customer-option.no-results { color: var(--ink2); font-style: italic; cursor: default; }
+
+/* Customer card */
+.info-card { border-radius: 8px; padding: 11px 13px; margin-top: 8px; display: none; }
+.info-card.active { display: block; }
+.customer-card { background: rgba(45,106,79,0.06); border: 1px solid rgba(45,106,79,0.2); }
+.vendor-card { background: rgba(184,134,11,0.05); border: 1px solid rgba(184,134,11,0.2); }
+.card-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; margin-bottom: 5px; }
+.card-detail { font-size: 11px; color: var(--ink2); line-height: 1.7; font-family: 'IBM Plex Mono', monospace; }
+.card-detail strong { color: var(--gold); font-weight: 600; }
+
+/* Products table */
+.products-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+.products-table th { background: var(--ink); color: var(--bg); padding: 6px 9px; text-align: left; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; }
+.products-table td { padding: 7px 9px; border-bottom: 1px solid var(--border); font-family: 'IBM Plex Mono', monospace; }
+.products-table td input { background: transparent; border: 1px solid transparent; border-radius: 4px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: var(--ink); padding: 3px 5px; width: 100%; outline: none; transition: all 0.15s; }
+.products-table td input:focus { border-color: var(--gold); background: white; }
+.products-table tr:last-child td { border-bottom: none; }
+.btn-add-row { width: 100%; background: transparent; border: 1px dashed rgba(26,22,18,0.2); border-radius: 6px; padding: 6px; font-size: 11px; color: var(--ink2); cursor: pointer; margin-top: 5px; font-family: 'IBM Plex Sans', sans-serif; transition: all 0.2s; }
+.btn-add-row:hover { border-color: var(--gold); color: var(--gold); }
+
+/* Product chips */
+.product-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.product-chip { background: rgba(184,134,11,0.1); border: 1px solid rgba(184,134,11,0.35); border-radius: 5px; padding: 4px 9px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--ink); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.product-chip:hover { background: var(--gold); color: white; border-color: var(--gold); }
+.product-chip.added { background: var(--green); color: white; border-color: var(--green); }
+.chips-label { font-size: 10px; font-weight: 600; color: var(--ink2); letter-spacing: 0.5px; margin-bottom: 5px; text-transform: uppercase; }
+.chips-wrap { margin-bottom: 10px; padding: 10px; background: rgba(26,22,18,0.03); border: 1px solid var(--border); border-radius: 7px; }
+
+/* PN field in table */
+.li-pn { font-size: 11px; font-family: 'IBM Plex Mono', monospace; }
+.pn-col { display: none; }
+.pn-col.visible { display: table-cell; }
+.pn-col-head { display: none; }
+.pn-col-head.visible { display: table-cell; }
+.btn-remove { background: none; border: none; color: rgba(139,58,15,0.35); cursor: pointer; font-size: 15px; transition: color 0.2s; }
+.btn-remove:hover { color: var(--rust); }
+
+.btn-generate { width: 100%; background: var(--ink); color: var(--bg); border: none; border-radius: 10px; padding: 15px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; margin-top: 6px; }
+.btn-generate:hover { background: var(--gold); color: var(--ink); }
+.btn-generate:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* MAIN */
+.main { padding: 28px 36px; overflow-y: auto; }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 400px; text-align: center; opacity: 0.45; }
+.empty-state.hidden { display: none; }
+.empty-icon { font-size: 52px; margin-bottom: 16px; }
+.empty-state h2 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; margin-bottom: 8px; }
+.empty-state p { font-size: 13px; color: var(--ink2); max-width: 280px; line-height: 1.6; }
+
+.loading-state { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 400px; text-align: center; }
+.loading-state.active { display: flex; }
+.loader { width: 40px; height: 40px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-state p { font-size: 14px; color: var(--ink2); }
+.loading-state .sub { font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: var(--gold); margin-top: 6px; }
+
+.po-document { display: none; animation: fadeIn 0.4s ease; }
+.po-document.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.output-tabs { display: flex; gap: 2px; margin-bottom: 22px; border-bottom: 2px solid var(--border); }
+.output-tab { padding: 10px 18px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--ink2); font-family: 'IBM Plex Sans', sans-serif; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+.output-tab.active { color: var(--ink); border-bottom-color: var(--gold); }
+.output-panel { display: none; }
+.output-panel.active { display: block; }
+
+.po-actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.btn-action { padding: 8px 18px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif; transition: all 0.2s; border: 1px solid var(--border); background: var(--cream); color: var(--ink); }
+.btn-action:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn-action.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn-action.primary:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.btn-action.copied { background: var(--green); color: white; border-color: var(--green); }
+
+/* PO Paper */
+.po-paper { background: white; border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 4px 24px rgba(26,22,18,0.1); max-width: 760px; padding: 44px 52px; font-family: 'IBM Plex Sans', sans-serif; }
+.po-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 26px; padding-bottom: 18px; border-bottom: 2px solid var(--ink); }
+.po-company h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 2px; color: var(--ink); }
+.po-company p { font-size: 11px; color: var(--ink2); line-height: 1.7; margin-top: 3px; }
+.po-badge { text-align: right; }
+.po-badge .po-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: 3px; color: var(--gold); }
+.po-badge .po-number { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--ink); margin-top: 3px; }
+.po-badge .po-date { font-size: 11px; color: var(--ink2); margin-top: 2px; }
+.po-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 22px; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.po-meta-box { padding: 13px 16px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.po-meta-box:nth-child(2n) { border-right: none; }
+.po-meta-box:nth-last-child(-n+2) { border-bottom: none; }
+.po-meta-label { font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+.po-meta-value { font-size: 12px; font-weight: 500; color: var(--ink); line-height: 1.5; font-family: 'IBM Plex Mono', monospace; }
+.po-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+.po-table thead tr { background: var(--ink); color: var(--bg); }
+.po-table thead th { padding: 9px 12px; text-align: left; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; }
+.po-table thead th:last-child { text-align: right; }
+.po-table tbody tr { border-bottom: 1px solid var(--border); }
+.po-table tbody tr:nth-child(even) { background: rgba(26,22,18,0.02); }
+.po-table tbody td { padding: 10px 12px; color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+.po-table tbody td:last-child { text-align: right; }
+.po-table tfoot tr { background: rgba(184,134,11,0.06); }
+.po-table tfoot td { padding: 10px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; border-top: 2px solid var(--gold); }
+.po-table tfoot .total-label { font-weight: 600; letter-spacing: 1px; text-transform: uppercase; font-size: 11px; color: var(--ink2); }
+.po-table tfoot .total-val { text-align: right; font-weight: 600; font-size: 14px; }
+.po-notes { background: rgba(26,22,18,0.03); border: 1px solid var(--border); border-radius: 4px; padding: 13px 16px; margin-bottom: 16px; }
+.po-notes-label { font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 5px; }
+.po-notes-text { font-size: 12px; color: var(--ink2); line-height: 1.6; }
+.po-sig { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--border); }
+.sig-block .sig-line { border-bottom: 1px solid var(--ink); margin-bottom: 6px; height: 32px; }
+.sig-block .sig-label { font-size: 10px; color: var(--ink2); }
+
+/* Email */
+.email-preview { background: white; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow); }
+.email-preview-header { padding: 14px 20px; border-bottom: 1px solid var(--border); background: rgba(26,22,18,0.02); }
+.email-row { display: flex; gap: 8px; margin-bottom: 5px; align-items: baseline; }
+.email-row:last-child { margin-bottom: 0; }
+.email-row-label { font-size: 10px; font-weight: 600; color: var(--gold); width: 55px; flex-shrink: 0; text-transform: uppercase; }
+.email-row-val { color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+.email-preview-body { padding: 20px; font-size: 13.5px; line-height: 1.8; color: var(--ink); white-space: pre-wrap; }
+
+@media print {
+  .topbar, .sidebar, .po-actions, .output-tabs { display: none !important; }
+  .layout { display: block; }
+  .main { padding: 0; }
+  .po-paper { box-shadow: none; border: none; padding: 0; }
+  .po-document { display: block !important; }
+}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,22,18,.55);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--cream);border-radius:14px;padding:28px 30px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(26,22,18,.2);max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;margin-bottom:18px;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink2)}
+.modal .field{margin-bottom:12px}
+.modal .field label{display:block;font-size:10px;font-weight:600;color:var(--ink2);letter-spacing:.5px;margin-bottom:4px;text-transform:uppercase}
+.modal .field input,.modal .field textarea{width:100%;background:white;border:1px solid var(--border);border-radius:7px;color:var(--ink);font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:8px 10px;outline:none;box-sizing:border-box}
+.modal .field input:focus,.modal .field textarea:focus{border-color:var(--gold)}
+.modal .field textarea{min-height:60px;resize:vertical}
+.modal-btns{display:flex;gap:10px;margin-top:18px}
+.btn-modal-save{flex:1;background:var(--gold);color:white;border:none;border-radius:8px;padding:11px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer}
+.btn-modal-cancel{background:transparent;border:1px solid var(--border);border-radius:8px;padding:11px 18px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;cursor:pointer;color:var(--ink2)}
+.modal-note{font-size:11px;color:var(--ink2);background:rgba(184,134,11,.07);border-radius:6px;padding:8px 10px;margin-bottom:14px;line-height:1.5}
+/* ── IMPORT PANEL ──────────────────────────────────────────────────── */
+.import-panel { display:none; position:fixed; inset:0; background:var(--bg); z-index:500; flex-direction:column; }
+.import-panel.open { display:flex; }
+.import-topbar { background:var(--ink); color:var(--bg); padding:0 32px; height:56px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.import-topbar-left { display:flex; align-items:center; gap:16px; }
+.import-title { font-family:'Syne',sans-serif; font-weight:800; font-size:14px; letter-spacing:2px; text-transform:uppercase; }
+.import-subtitle { font-size:11px; color:rgba(242,237,230,0.5); }
+.btn-close-import { background:transparent; border:1px solid rgba(242,237,230,0.2); border-radius:6px; color:rgba(242,237,230,0.7); padding:6px 14px; font-size:12px; cursor:pointer; font-family:'IBM Plex Sans',sans-serif; transition:all 0.2s; }
+.btn-close-import:hover { background:rgba(242,237,230,0.1); color:var(--bg); }
+.import-body { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.import-controls { padding:16px 28px 12px; border-bottom:1px solid var(--border); background:var(--cream); display:flex; align-items:center; gap:12px; flex-wrap:wrap; flex-shrink:0; }
+.import-upload-zone { border:2px dashed rgba(184,134,11,0.4); border-radius:10px; padding:14px 20px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:all 0.2s; background:white; }
+.import-upload-zone:hover { border-color:var(--gold); background:rgba(184,134,11,0.04); }
+.import-upload-zone.loaded { border-color:var(--green); background:rgba(45,106,79,0.05); }
+.import-upload-icon { font-size:22px; }
+.import-upload-text { font-size:12px; color:var(--ink2); }
+.import-upload-text strong { color:var(--ink); display:block; font-size:13px; margin-bottom:2px; }
+#importFileInput { display:none; }
+.import-search { flex:1; min-width:180px; background:white; border:1px solid var(--border); border-radius:7px; padding:8px 12px; font-size:13px; font-family:'IBM Plex Sans',sans-serif; outline:none; transition:border-color 0.2s; }
+.import-search:focus { border-color:var(--gold); }
+.import-filter-row { display:flex; gap:8px; align-items:center; }
+.import-filter { background:white; border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:12px; font-family:'IBM Plex Sans',sans-serif; outline:none; color:var(--ink); cursor:pointer; }
+.import-count { font-size:11px; color:var(--ink2); white-space:nowrap; font-family:'IBM Plex Mono',monospace; }
+.import-table-wrap { flex:1; overflow:auto; padding:0; }
+.import-table { width:100%; border-collapse:collapse; font-size:12px; }
+.import-table thead { position:sticky; top:0; z-index:10; }
+.import-table thead th { background:var(--ink); color:var(--bg); padding:9px 12px; text-align:left; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; white-space:nowrap; }
+.import-table tbody tr { border-bottom:1px solid rgba(26,22,18,0.06); cursor:pointer; transition:background 0.1s; }
+.import-table tbody tr:hover { background:rgba(184,134,11,0.07); }
+.import-table tbody tr.selected { background:rgba(184,134,11,0.14); }
+.import-table td { padding:9px 12px; vertical-align:top; font-family:'IBM Plex Mono',monospace; color:var(--ink); }
+.import-table td.td-status { white-space:nowrap; }
+.import-table td.td-desc { max-width:280px; font-size:11px; line-height:1.4; }
+.import-table td.td-cust { font-weight:600; white-space:nowrap; }
+.import-table td.td-num { text-align:right; }
+.status-pill { display:inline-block; padding:2px 7px; border-radius:4px; font-size:9px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; white-space:nowrap; }
+.status-pill.confirmed { background:rgba(45,106,79,0.15); color:#2d6a4f; }
+.status-pill.sent { background:rgba(184,134,11,0.15); color:#8a6200; }
+.status-pill.waiting { background:rgba(139,58,15,0.12); color:#8b3a0f; }
+.status-pill.ready { background:rgba(26,22,18,0.08); color:var(--ink2); }
+.status-pill.other { background:rgba(100,100,150,0.12); color:#445; }
+.import-footer { padding:12px 28px; border-top:1px solid var(--border); background:var(--cream); display:flex; align-items:center; gap:12px; justify-content:space-between; flex-shrink:0; }
+.import-footer-hint { font-size:11px; color:var(--ink2); }
+.btn-load-order { background:var(--gold); color:white; border:none; border-radius:8px; padding:10px 22px; font-family:'Syne',sans-serif; font-weight:700; font-size:13px; letter-spacing:1px; cursor:pointer; transition:all 0.2s; }
+.btn-load-order:hover { background:var(--gold2); color:var(--ink); }
+.btn-load-order:disabled { opacity:0.35; cursor:not-allowed; }
+.import-empty { text-align:center; padding:60px 20px; color:var(--ink2); }
+.import-empty .ie-icon { font-size:48px; margin-bottom:12px; }
+.import-empty h3 { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:6px; color:var(--ink); }
+.import-empty p { font-size:12px; line-height:1.6; max-width:320px; margin:0 auto; }
+</style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo" style="width:40px;height:40px;border-radius:6px;overflow:hidden;background:white;padding:2px;"><img src="data:image/png;base64,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" style="width:100%;height:100%;object-fit:contain;"></div>
+    <span class="topbar-name">MPH United</span>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-stat">Customers: <span>183</span></div>
+    <div class="topbar-stat">Vendors: <span>20</span></div>
+    <div class="topbar-module">PO System v3</div>
+    <button onclick="openImport()" style="background:rgba(184,134,11,0.25);border:1px solid rgba(184,134,11,0.5);color:var(--gold2);border-radius:6px;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:'Syne',sans-serif;transition:all 0.2s;" onmouseover="this.style.background='var(--gold)';this.style.color='white'" onmouseout="this.style.background='rgba(184,134,11,0.25)';this.style.color='var(--gold2)'">📂 Import from Excel</button>
+  </div>
+</div>
+
+<!-- ═══ IMPORT PANEL ═══ -->
+<div class="import-panel" id="importPanel">
+  <div class="import-topbar">
+    <div class="import-topbar-left">
+      <div class="import-title">📂 Import from MPH Orders</div>
+      <div class="import-subtitle" id="importSubtitle">Upload MPH_Orders.xlsm to load live orders</div>
+    </div>
+    <button class="btn-close-import" onclick="closeImport()">✕ Close</button>
+  </div>
+  <div class="import-body">
+    <div class="import-controls">
+      <div class="import-upload-zone" id="uploadZone" style="cursor:pointer;" onclick="signIn()">
+        <div class="import-upload-icon" id="uploadIcon">🔐</div>
+        <div class="import-upload-text">
+          <strong id="uploadLabel">Sign in with Microsoft</strong>
+          <span id="uploadSub">Click here — use your MPH United account</span>
+        </div>
+        <div id="liveIndicator" style="display:none;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);margin-left:auto;flex-shrink:0;"></div>
+      </div>
+      <input type="text" class="import-search" id="importSearch" placeholder="Search customer, vendor, PO#, description..." oninput="filterImportTable()" disabled>
+      <div class="import-filter-row">
+        <select class="import-filter" id="filterStatus" onchange="filterImportTable()" disabled>
+          <option value="">All Statuses</option>
+          <option value="CONFIRMED TO CUSTOMER">Confirmed</option>
+          <option value="WAITING ON VENDOR TO CONFIRM">Waiting on Vendor</option>
+          <option value="WAITING TO CONFIRM TO CUSTOMER">Waiting on Customer</option>
+          <option value="SENT ORDER TO CARRIER">Sent to Carrier</option>
+          <option value="READY TO SHIP">Ready to Ship</option>
+          <option value="PO REQUEST TO ACCOUNTING">PO Request</option>
+        </select>
+        <select class="import-filter" id="filterVendorSheet" onchange="filterImportTable()" disabled>
+          <option value="">All Vendors</option>
+        </select>
+        <span class="import-count" id="importCount">—</span>
+      </div>
+    </div>
+    <div class="import-table-wrap" id="importTableWrap">
+      <div class="import-empty">
+        <div class="ie-icon">🔐</div>
+        <h3>Sign In to Load Orders</h3>
+        <p>Click the bar above and sign in with your MPH United Microsoft account. Orders load automatically.</p>
+      </div>
+    </div>
+  </div>
+  <div class="import-footer">
+    <div class="import-footer-hint" id="importFooterHint">Select a row to load it into the PO builder</div>
+    <button class="btn-load-order" id="btnLoadOrder" onclick="loadSelectedOrder()" disabled>Load into PO Builder →</button>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <div class="sidebar">
+
+    <div class="divider">Fill in the order details below</div>
+
+    <!-- CUSTOMER -->
+    <div class="form-section">
+      <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center;">Customer <button onclick="openModal('customerModal')" style="font-size:10px;background:var(--gold);color:white;border:none;border-radius:5px;padding:3px 8px;cursor:pointer;font-weight:600;">+ Add New</button></div>
+      <div class="field">
+        <label>Search & Select Customer *</label>
+        <div class="customer-search-wrap">
+          <input type="text" class="customer-search-input" id="customerSearch" placeholder="Type customer name to search..." autocomplete="off" oninput="filterCustomers()" onfocus="showDropdown()" onblur="hideDropdown()">
+          <div class="customer-dropdown" id="customerDropdown"></div>
+        </div>
+        <input type="hidden" id="selectedCustomerName">
+      </div>
+      <div class="info-card customer-card" id="customerCard">
+        <div class="card-name" id="ccName"></div>
+        <div class="card-detail" id="ccDetail"></div>
+      </div>
+
+      <div class="field-row" style="margin-top:10px">
+        <div class="field">
+          <label>Customer PO #</label>
+          <input type="text" id="customerPO" placeholder="e.g. 13528">
+        </div>
+        <div class="field">
+          <label>Order Date</label>
+          <input type="date" id="orderDate">
+        </div>
+      </div>
+      <div class="field">
+        <label>Ship-To Address</label>
+        <textarea id="shipTo" placeholder="Will auto-fill from customer record"></textarea>
+      </div>
+      
+      <div class="field">
+        <label>Customer Email (for confirmation)</label>
+        <input type="email" id="customerEmail" placeholder="Will auto-fill from customer record">
+      </div>
+    </div>
+
+    <!-- VENDOR -->
+    <div class="form-section">
+      <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center;">Vendor / Plant <button onclick="openModal('vendorModal')" style="font-size:10px;background:var(--gold);color:white;border:none;border-radius:5px;padding:3px 8px;cursor:pointer;font-weight:600;">+ Add New</button></div>
+      <div class="field">
+        <label>Select Vendor *</label>
+        <select id="vendorSelect" onchange="loadVendor()">
+          <option value="">— Select vendor —</option>
+          <optgroup label="🏭 New IBC / New Bottle Plants">
+            <option value="core_houston">Core — Houston, TX (Bottles only)</option>
+            <option value="core_nashua">Core — Nashua, IA (330 Bottles)</option>
+            <option value="core_shreveport">Core — Shreveport, LA (275/330 IBC, 55gal drum)</option>
+            <option value="core_southholland">Core — South Holland, IL (Bottles only)</option>
+            <option value="core_waterloo">Core — Waterloo, IA (135/275/330 IBC, 55gal drum)</option>
+            <option value="core_calhoun">Core — Calhoun, GA (275/330 Bottles & IBCs, drums)</option>
+            <option value="alliance_greenwood">Alliance Container — Greenwood, IN (275/330 Bottles)</option>
+            <option value="alliance_hillsboro">Alliance Container Texas — Hillsboro, TX (275/330 Bottles)</option>
+          </optgroup>
+          <optgroup label="♻️ Rebottle & Washout Plants">
+            <option value="fivestar_bristow">5 Star Industrial — Bristow, OK (275/330)</option>
+            <option value="sec_cleveland">SEC SouthEast Container — Cleveland, MS (275)</option>
+            <option value="gpc_gardencity">GPC Great Plains — Garden City, KS (135/275/330)</option>
+            <option value="sts_greenwood">STS Superior Tote — Greenwood, IN (275/330)</option>
+            <option value="ucg_hillsboro">United Container Group — Hillsboro, TX (275/330)</option>
+            <option value="ttw_odessa">TTW Texas Tote Works — Odessa, TX (275/330)</option>
+            <option value="tld_socal">TLD Ted Levine Drum — South El Monte, CA</option>
+            <option value="rrg_stanwood">RRG Rural Recycling — Stanwood, IA (275)</option>
+            <option value="clean_stlouis">Clean Environmental — St. Louis, MO (275/330)</option>
+            <option value="sts_summitville">STS Superior Tote — Summitville, IN (275 washout)</option>
+          </optgroup>
+          <optgroup label="🚿 Washout Only">
+            <option value="centurion_lewisburg">Centurion — Lewisburg, TN ⚠ CPU ONLY</option>
+            <option value="centurion_memphis">Centurion — Memphis, TN ⚠ CPU ONLY</option>
+          </optgroup>
+          <optgroup label="🥁 Drum Recycle">
+            <option value="coastal_alvin">Coastal Container Services — Alvin, TX</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="info-card vendor-card" id="vendorCard">
+        <div class="card-name" id="vcName"></div>
+        <div class="card-detail" id="vcDetail"></div>
+      </div>
+    </div>
+
+    <!-- SHIPPING -->
+    <div class="form-section">
+      <div class="sec-title">Shipping</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Ship Date</label>
+          <input type="date" id="shipDate">
+        </div>
+        <div class="field">
+          <label>Ship Via</label>
+          <select id="shipVia">
+            <option value="Customer Pickup (CPU)">Customer Pickup (CPU)</option>
+            <option value="Vendor Truck">Vendor Truck</option>
+            <option value="Frontline Logistics">Frontline Logistics</option>
+            <option value="Oasis">Oasis</option>
+            <option value="G&L Transport">G&L Transport</option>
+            <option value="Triple C Express">Triple C Express</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Payment Terms</label>
+        <select id="paymentTerms">
+          <option value="Net 30">Net 30</option>
+          <option value="Net 15">Net 15</option>
+          <option value="Net 45">Net 45</option>
+          <option value="Due on Receipt">Due on Receipt</option>
+          <option value="COD">COD</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- LINE ITEMS -->
+    <div class="form-section">
+      <div class="sec-title">Products & Pricing</div>
+      <div id="chipsWrap" class="chips-wrap" style="display:none;">
+        <div class="chips-label">Tap to add vendor products ↓</div>
+        <div class="product-chips" id="productChips"></div>
+      </div>
+      <table class="products-table" id="lineTable">
+        <thead><tr><th>Product / Description</th><th class="pn-col-head" id="pnHead">P/N</th><th>Qty</th><th>Buy $</th><th></th></tr></thead>
+        <tbody id="lineBody">
+        </tbody>
+      </table>
+      <button class="btn-add-row" onclick="addRow()">+ Add Custom Line Item</button>
+    </div>
+
+    <!-- NOTES -->
+    <div class="form-section">
+      <div class="sec-title">Notes</div>
+      <div class="field">
+        <label>Special Instructions / PO Notes</label>
+        <textarea id="specialInstructions" placeholder="Any special handling, specs, or notes for this order..."></textarea>
+      </div>
+    </div>
+
+    <button class="btn-generate" id="generateBtn" onclick="generatePO()">⚡ Generate PO + All Emails</button>
+  </div>
+
+  <!-- ═══ MAIN OUTPUT ═══ -->
+  <div class="main">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">📋</div>
+      <h2>Ready to Generate</h2>
+      <p>Paste a customer PO to auto-fill, or select customer + vendor manually, then click Generate.</p>
+    </div>
+    <div class="loading-state" id="loadingState">
+      <div class="loader"></div>
+      <p id="loadingMsg">Processing...</p>
+      <div class="sub" id="loadingSub">Please wait</div>
+    </div>
+    <div class="po-document" id="poDocument">
+      <div class="output-tabs">
+        <button class="output-tab active" onclick="switchTab(0,this)">📄 PO Document</button>
+        <button class="output-tab" onclick="switchTab(1,this)">📧 Vendor Email</button>
+        <button class="output-tab" onclick="switchTab(2,this)">📧 Customer Confirmation</button>
+      </div>
+      <div class="output-panel active" id="outPanel0">
+        <div class="po-actions">
+          <button class="btn-action primary" onclick="window.print()">🖨 Print / Save PDF</button>
+          <button class="btn-action" id="copyPOBtn" onclick="copyEl('poPaper','copyPOBtn','Copy PO')">Copy PO Text</button>
+          <button class="btn-action" onclick="generatePO()">↺ Regenerate</button>
+        </div>
+        <div class="po-paper" id="poPaper"></div>
+      </div>
+      <div class="output-panel" id="outPanel1">
+        <div class="po-actions"><button class="btn-action" id="copyV" onclick="copyEmail(0,'copyV')">Copy Email</button></div>
+        <div class="email-preview" id="emailDiv0"></div>
+      </div>
+      <div class="output-panel" id="outPanel2">
+        <div class="po-actions"><button class="btn-action" id="copyC" onclick="copyEmail(1,'copyC')">Copy Email</button></div>
+        <div class="email-preview" id="emailDiv1"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// -- CUSTOMER DATA ----------------------------------------------------------
+const CUSTOMERS = [{"name": "5 Star Industrial Containers", "phone": "", "email": "", "contact": "", "bill_address": "5 Star Industrial Containers14714 State Hwy 64 WTyler Tx. 75704", "ship_address": "5 Star Industrial Containers14714 State Hwy 64 WTyler Tx. 75704"}, {"name": "5 Star Industrial Containers OK", "phone": "", "email": "aibarra@permiancontainers.com, ajibarra@permiancontainers.com", "contact": "", "bill_address": "502 Industrial Rd Bristow OK 74010", "ship_address": "502 Industrial Rd Bristow OK 74010"}, {"name": "Achieved Investments LLC", "phone": "", "email": "cpa@permiancontainers.com", "contact": "", "bill_address": "647 PO Box Terrell TX 75160", "ship_address": "647 PO Box Terrell TX 75160"}, {"name": "ACID PRODUCTS", "phone": "", "email": "nancy.hoiden@acidproducts.net", "contact": "", "bill_address": "600 West 41st Street Chicago IL 60609", "ship_address": "600 West 41st Street Chicago IL 60609"}, {"name": "Adjuvants Unlimited", "phone": "", "email": "apinvoices@au-iou.com", "contact": "", "bill_address": "3621 West 5th Street Tulsa OK 74127", "ship_address": "3621 West 5th Street Tulsa OK 74127"}, {"name": "AG Ingenuity", "phone": "", "email": "kyle.kight@agingenuity.net", "contact": "", "bill_address": "602 Main St Gruver TX 79040", "ship_address": "602 Main St Gruver TX 79040"}, {"name": "Ag Spray Equipment", "phone": "", "email": "Brad.Klassen@agspray.com", "contact": "", "bill_address": "200 S. Derby Lane N. Sioux City SD 57049", "ship_address": "200 S. Derby Lane N. Sioux City SD 57049"}, {"name": "Agpack Inc.", "phone": "", "email": "SGB8714@msn.com", "contact": "", "bill_address": "7501 Saratoga Ave Lubbock TX 79424", "ship_address": "7501 Saratoga Ave Lubbock TX 79424"}, {"name": "AgTank Solutions", "phone": "", "email": "dane@agtanksolutions.com, meredith@agtanksolutions.com", "contact": "", "bill_address": "P.O. Box 1812 Cleveland MS 38372", "ship_address": "P.O. Box 1812 Cleveland MS 38372"}, {"name": "Agtegra Cooperative", "phone": "", "email": "lon.siefken@agtegra.com", "contact": "", "bill_address": "908 Lamont St S Aberdeen SD 57401", "ship_address": "908 Lamont St S Aberdeen SD 57401"}, {"name": "Alliance Container Hillsboro", "phone": "", "email": "", "contact": "Alliance  Container", "bill_address": "", "ship_address": ""}, {"name": "Apex Drum Company", "phone": "", "email": "", "contact": "", "bill_address": "6226 Ferguson Drive Commerce CA 90022", "ship_address": "6226 Ferguson Drive Commerce CA 90022"}, {"name": "Arguindegui Oil", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Arts Milling Service", "phone": "Mobile:(563) 569-8386", "email": "jhans@artsmill.biz", "contact": "", "bill_address": "PO Box 8 Protivin IA 52163", "ship_address": "PO Box 8 Protivin IA 52163"}, {"name": "Avon Plastics", "phone": "", "email": "", "contact": "Avon  Plastics", "bill_address": "210 Ampe DrivePaynesville, MN 56362", "ship_address": "210 Ampe DrivePaynesville, MN 56362"}, {"name": "Axel Americas, LLC", "phone": "", "email": "apvendor@axelch.com", "contact": "", "bill_address": "516 S. 25th West Ave. Tulsa OK 74127", "ship_address": "516 S. 25th West Ave. Tulsa OK 74127"}, {"name": "Axel Royal, LLC", "phone": "", "email": "ap@axelch.com", "contact": "", "bill_address": "516 S. 25th West Ave. Tulsa OK 74127", "ship_address": "516 S. 25th West Ave. Tulsa OK 74127"}, {"name": "Barrel Accessories & Supply Co. (BASCO)", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 7203 Carol Stream IL 60197", "ship_address": "PO BOX 7203 Carol Stream IL 60197"}, {"name": "Barton Solvents Bettendorf Branch IA", "phone": "", "email": "bt_eft@barsol.com", "contact": "", "bill_address": "204 36th St Bettendorf IA 52722", "ship_address": "204 36th St Bettendorf IA 52722"}, {"name": "Barton Solvents El Dorado Branch, KS", "phone": "", "email": "el_ap@barsol.com", "contact": "", "bill_address": "2601 Pioneer Drive El Dorado KS 67042 USA", "ship_address": "2601 Pioneer Drive El Dorado KS 67042 USA"}, {"name": "Berlin Packaging", "phone": "", "email": "ubpinvoices@BerlinPackaging.com", "contact": "Berlin  Packaging", "bill_address": "525 West Monroe Street14th Floor Chicago IL 60661", "ship_address": "525 West Monroe Street14th Floor Chicago IL 60661"}, {"name": "BNSF Logistics", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Brandt", "phone": "", "email": "", "contact": "Brandt", "bill_address": "2935 S Koke Mill RoadSpringfield IL 62711", "ship_address": "211 west State rte 125Pleasant Plains Il 62677"}, {"name": "Caleb Chemical Inc.", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1263 Frankfort IL", "ship_address": "PO Box 1263 Frankfort IL"}, {"name": "Catalynt Solutions, INC", "phone": "", "email": "", "contact": "", "bill_address": "22817 102nd Place West Edmonds WA 98020", "ship_address": "22817 102nd Place West Edmonds WA 98020"}, {"name": "CDF Corporation", "phone": "", "email": "", "contact": "", "bill_address": "57 Armstrong Rd. Plymouth MA 02360 U.S.", "ship_address": "57 Armstrong Rd. Plymouth MA 02360 U.S."}, {"name": "Celta Chemical, Inc.", "phone": "Phone:(314) 882-0039", "email": "eileen@celtachem.com", "contact": "", "bill_address": "PO Box 124 Grover MO 63040", "ship_address": "PO Box 124 Grover MO 63040"}, {"name": "Centurion Container, Lewisburg TN", "phone": "", "email": "ccowley@enterprizecontainer.com", "contact": "", "bill_address": "1632 Childress Road Lewisburg TN 37091", "ship_address": "671 Garrett Parkway Lewisburg TN 37091"}, {"name": "Ceres Solutions", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 3312802 W State Road 352Boswell, Indiana 47921Attn: Greg Babcock", "ship_address": "PO Box 3312802 W State Road 352Boswell, Indiana 47921Attn: Greg Babcock"}, {"name": "CHEMLINE, INC.", "phone": "", "email": "ap@chemline.net", "contact": "", "bill_address": "5151 Natural Bridge Ave St Louis MO 63115", "ship_address": "5151 Natural Bridge Ave St Louis MO 63115"}, {"name": "Chemorse", "phone": "", "email": "CraigA@chemorse.com", "contact": "", "bill_address": "1596 NE 58th Township Des Moines IA 50313", "ship_address": "1596 NE 58th Township Des Moines IA 50313"}, {"name": "Chemtrade Refinery Services Inc.", "phone": "", "email": "", "contact": "", "bill_address": "5101 West 21st. Street Tulsa OK 74107", "ship_address": "5101 West 21st. Street Tulsa OK 74107"}, {"name": "Chromascape", "phone": "", "email": "", "contact": "Chromascape", "bill_address": "508 Industrial BlvdAtlanta, TX 75551903-796-7127", "ship_address": "508 Industrial BlvdAtlanta, TX 75551903-796-7127"}, {"name": "CHS High Plains", "phone": "", "email": "jacob.weaver@chsinc.com", "contact": "", "bill_address": "Attn: CHS Accounts PayablePO Box 64089 Saint Paul MN 55164-0089 USA", "ship_address": "Attn: CHS Accounts PayablePO Box 64089 Saint Paul MN 55164-0089 USA"}, {"name": "CL Smith", "phone": "", "email": "", "contact": "CL  Smith", "bill_address": "1311 South 39th Street St. Louis MO 63110 Terms: 1% 7 NET 15", "ship_address": "1311 South 39th Street St. Louis MO 63110 Terms: 1% 7 NET 15"}, {"name": "Clean Environmental Management llc", "phone": "", "email": "brice@cleanenvironmentalmanagementllc.com, ghudson@cleanenvironmentalmanagementllc.com", "contact": "", "bill_address": "1184 Warm Winds Drive O'Fallon MO 63366", "ship_address": "1184 Warm Winds Drive O'Fallon MO 63366"}, {"name": "Coastal Bend Containers Inc", "phone": "", "email": "", "contact": "", "bill_address": "4752 County Rd 40 Robstown Texas 78380", "ship_address": "4752 County Rd 40 Robstown Texas 78380"}, {"name": "Coastal Container Services", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Colorbiotics", "phone": "", "email": "BCC-Invoices-USA@mbcc-group.com", "contact": "", "bill_address": "ISS DD - Colorbiotics, LLCPO BOX 696402 San Antonio TX 78269", "ship_address": "ISS DD - Colorbiotics, LLCPO BOX 696402 San Antonio TX 78269"}, {"name": "Cone Solvents Frontier Logistical Services", "phone": "", "email": "", "contact": "", "bill_address": "600 N. Bryant Oklahoma City OK 73117", "ship_address": "600 N. Bryant Oklahoma City OK 73117"}, {"name": "Container Compliance", "phone": "", "email": "dmackall@containercompliance.com", "contact": "", "bill_address": "5151 Denison Avenue Cleveland OH 44102", "ship_address": "5151 Denison Avenue Cleveland OH 44102"}, {"name": "Container Connectionz-Customer", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 517 Isanti MN 55040", "ship_address": "PO Box 517 Isanti MN 55040"}, {"name": "Container Recycling Inc.", "phone": "Phone:(256) 565-4896", "email": "", "contact": "", "bill_address": "Container Recyclers230 Cockrell Ave SW, Decatur AL AL", "ship_address": "Container Recyclers230 Cockrell Ave SW, Decatur AL AL"}, {"name": "Container Services Network, LLC", "phone": "", "email": "MTomlinson@ContainerServicesNetwork.com", "contact": "", "bill_address": "3940 Verde Vista Dr Thousand Oaks CA 91360-2650", "ship_address": "3940 Verde Vista Dr Thousand Oaks CA 91360-2650"}, {"name": "Container Technology  INC", "phone": "", "email": "payables@containertechnology.com", "contact": "", "bill_address": "8550 W Charleston Blvd Suite 102-185 Las Vegas NV 89117", "ship_address": "8550 W Charleston Blvd Suite 102-185 Las Vegas NV 89117"}, {"name": "CORE PLASTECH INTERNATIONAL", "phone": "", "email": "", "contact": "CORE PLASTECH INTERNATIONAL", "bill_address": "15555 La Salle St. South Holland, IL 60473", "ship_address": "15555 La Salle St. South Holland, IL 60473"}, {"name": "Cotey Chemical Co.", "phone": "", "email": "", "contact": "", "bill_address": "P.O.  Box 2039 Lubbock TX 79408", "ship_address": "P.O.  Box 2039 Lubbock TX 79408"}, {"name": "CPU", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Crown Packaging International, Inc.", "phone": "", "email": "boylen@crownpolycon.com", "contact": "Crown Packaging International, Inc.", "bill_address": "8919 Colorado Street Merrillville, IN 46410", "ship_address": "8919 Colorado Street Merrillville, IN 46410"}, {"name": "Cyclone Seed / Chemical", "phone": "", "email": "", "contact": "", "bill_address": "111 Cyclone Ave P.O. Box 618 Harlan Iowa 51537", "ship_address": "111 Cyclone Ave P.O. Box 618 Harlan Iowa 51537"}, {"name": "Delaval Manufacturing", "phone": "", "email": "ap.us.dlm@delaval.com", "contact": "", "bill_address": "11100 Congress Avenue Kansas City MO 64153", "ship_address": "11100 Congress Avenue Kansas City MO 64153"}, {"name": "Diamond Vogel", "phone": "", "email": "", "contact": "", "bill_address": "1110 Albanv Place SE PO Box 380 Orange City IA 51041", "ship_address": "1110 Albanv Place SE PO Box 380 Orange City IA 51041"}, {"name": "Drexel Chemical Co.", "phone": "", "email": "", "contact": "Drexel Chemical Co.", "bill_address": "P.O. Box 13327Memphis, TN 38113-0327", "ship_address": "P.O. Box 13327Memphis, TN 38113-0327"}, {"name": "Drill Green Petro", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Eagle Ford Containers", "phone": "", "email": "", "contact": "", "bill_address": "4836 Fish Lane Beeville TX 78102", "ship_address": "4836 Fish Lane Beeville TX 78102"}, {"name": "Earth Science Laboratories, Inc", "phone": "", "email": "", "contact": "", "bill_address": "903 N. 47th Street Suite 105 Rogers AR 72756", "ship_address": "903 N. 47th Street Suite 105 Rogers AR 72756"}, {"name": "ECO-PAK", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "EcoGreen - Customer", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "EGE Products", "phone": "", "email": "accounting@egebio.com", "contact": "EGE  Products", "bill_address": "PO Box 538450 CR C Minneola KS 67865", "ship_address": "PO Box 538450 CR C Minneola KS 67865"}, {"name": "Enterprize Container", "phone": "", "email": "ccowley@enterprizecontainer.com, jennifer@enterprizecontainer.com", "contact": "Enterprize  Container", "bill_address": "1632 Childress Road Lewisburg TN 37091", "ship_address": "1632 Childress Road Lewisburg TN 37091"}, {"name": "Enviro Containers and Recycling", "phone": "", "email": "", "contact": "", "bill_address": "5904 50th Avenue Innisfail Alberta T4G 1 R7 Canada", "ship_address": "5904 50th Avenue Innisfail Alberta T4G 1 R7 Canada"}, {"name": "Enviro Science Technologies Inc", "phone": "", "email": "est@envirosciencetech.com", "contact": "", "bill_address": "15785 S Keeler Terrace Olathe, KS 66062", "ship_address": "15785 S Keeler Terrace Olathe, KS 66062"}, {"name": "Equity Exchange", "phone": "", "email": "", "contact": "", "bill_address": "4219 S. Main Street Perryton TX 79070", "ship_address": "4219 S. Main Street Perryton TX 79070"}, {"name": "Eureka Chemical Lab", "phone": "", "email": "billing@eureka-inc.com", "contact": "", "bill_address": "7277 S 2nd Line Rd La Porte IN 46350", "ship_address": "7277 S 2nd Line Rd La Porte IN 46350"}, {"name": "Exacto", "phone": "", "email": "", "contact": "Exacto", "bill_address": "200 Old Factory RoadSharon, WI 53585", "ship_address": "200 Old Factory RoadSharon, WI 53585"}, {"name": "Farmchem", "phone": "", "email": "kelly.eckenrod@farmchem.com", "contact": "", "bill_address": "616 Madison St. Floyd IA 50435", "ship_address": "616 Madison St. Floyd IA 50435"}, {"name": "Floratine Products Group", "phone": "", "email": "ashook@floratine.com", "contact": "", "bill_address": "355. E South Street Collierville TN 38017", "ship_address": "355. E South Street Collierville TN 38017"}, {"name": "Florida Coastal Colors, L.L.C.", "phone": "", "email": "jenn@floridacoastalcolors.com", "contact": "", "bill_address": "PO Box 778, Helena AL 35080", "ship_address": "PO Box 778, Helena AL 35080"}, {"name": "Four Seasons Containers LLC", "phone": "Mobile:(432) 853-4398", "email": "ipadilla@permiancontainers.com, mbriggs@permiancontainers.com, lrodriguez@permiancontainers.com", "contact": "", "bill_address": "PO Box 647 Terrell TX 75160", "ship_address": "PO Box 647 Terrell TX 75160"}, {"name": "Frontline Logistics", "phone": "", "email": "", "contact": "", "bill_address": "P.O. BOX 756 South Lyon MI 48178", "ship_address": "P.O. BOX 756 South Lyon MI 48178"}, {"name": "G. Phillips and Sons", "phone": "", "email": "", "contact": "G. Phillips and Sons", "bill_address": "8987 Wildlife LoopSarasota, FL 34238", "ship_address": "8987 Wildlife LoopSarasota, FL 34238"}, {"name": "Gates Engineered Lubricants, LLC", "phone": "", "email": "sara@gatesel.com", "contact": "", "bill_address": "18906 E Industrial Pkwy New Caney TX 77357", "ship_address": "18906 E Industrial Pkwy New Caney TX 77357"}, {"name": "Genesis Custom Chemical Blending", "phone": "", "email": "AP@genesisccb.com", "contact": "", "bill_address": "2708 NE Main St Ennis TX 75119", "ship_address": "2708 NE Main St Ennis TX 75119"}, {"name": "Geo Chemicals", "phone": "Phone:(620) 204-7200", "email": "accountspayable@geo-chemicals.com", "contact": "", "bill_address": "517 E 30th Ave STE E Hutchinson KS 67502", "ship_address": "517 E 30th Ave STE E Hutchinson KS 67502"}, {"name": "Great Plains Container LLC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Hampel Oil Distributors, Inc", "phone": "", "email": "Chad.Hodges@hampeloil.com", "contact": "", "bill_address": "3531 N Ridge Rd, UPPR 2 Wichita KS 67205", "ship_address": "3531 N Ridge Rd, UPPR 2 Wichita KS 67205"}, {"name": "Harris Vacations", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Hartland Lubricants", "phone": "", "email": "brenda.Byrne@HTPEnergy.com, lydia.eddy@hartlandlubes.com", "contact": "", "bill_address": "2455 CommercialDrive Sparta WI 54656", "ship_address": "2455 CommercialDrive Sparta WI 54656"}, {"name": "HB Fuller", "phone": "", "email": "", "contact": "", "bill_address": "4440 Malsbury Road Blue Ash OH 45242", "ship_address": "4440 Malsbury Road Blue Ash OH 45242"}, {"name": "Helena Agri-Enterprises", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Hitachi Energy", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Holganix Inc.", "phone": "", "email": "", "contact": "", "bill_address": "1000 N. 5 Points Road West Chester PA 19380", "ship_address": "1000 N. 5 Points Road West Chester PA 19380"}, {"name": "IBC tote Recycling", "phone": "", "email": "AP@mrawasteexchange.com", "contact": "", "bill_address": "PO Box 2398 Austin TX 78768", "ship_address": "PO Box 2398 Austin TX 78768"}, {"name": "IMACC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Industrial Chemicals Jonesboro.", "phone": "", "email": "", "contact": "", "bill_address": "7536 Jonesboro Road Jonesboro GA 30236", "ship_address": "7536 Jonesboro Road Jonesboro GA 30236"}, {"name": "Industrial Chemicals, Birmingham", "phone": "", "email": "", "contact": "", "bill_address": "1133 Roberts Industrial Drive Birmingham AL 35208", "ship_address": "1133 Roberts Industrial Drive Birmingham AL 35208"}, {"name": "Industrial Container Services", "phone": "", "email": "", "contact": "Industrial Container Services", "bill_address": "", "ship_address": ""}, {"name": "Industrial Container Services - Lakeland", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Industrial Container Services - NC, LLC", "phone": "", "email": "", "contact": "", "bill_address": "1704 Barnes StreetReidsville, NC 27320", "ship_address": "1704 Barnes StreetReidsville, NC 27320"}, {"name": "Industrial Containers of Texas", "phone": "", "email": "", "contact": "Industrial Containers of Texas", "bill_address": "7502 Mesa Dr.Houston, TX 77028", "ship_address": "7502 Mesa Dr.Houston, TX 77028"}, {"name": "Industrial Oils Unlimited", "phone": "", "email": "", "contact": "", "bill_address": "3621 W 5th St Tulsa OK 74127", "ship_address": "3621 W 5th St Tulsa OK 74127"}, {"name": "Integrity Bio-Chem", "phone": "Phone:(817) 402-0444", "email": "cclark@integritybiochem.com", "contact": "", "bill_address": "1100 North Cresson Hwy Cresson TX 76035", "ship_address": "1100 North Cresson Hwy Cresson TX 76035"}, {"name": "Interstate AG Containers", "phone": "", "email": "bbittle@gmail.com", "contact": "Brad  Bittle", "bill_address": "PO BOX 265 BUTTONWILLOW CA 93206", "ship_address": "PO BOX 265 BUTTONWILLOW CA 93206"}, {"name": "IRP Logistics", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 718Highwood IL. 60040", "ship_address": "PO BOX 718Highwood IL. 60040"}, {"name": "KCI-KINGSBURY", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Kemin Nutrisurance", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 70 Des Moines IA 50306", "ship_address": "PO Box 70 Des Moines IA 50306"}, {"name": "Kodiak AI", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Koppers Performance Chemicals,Inc.", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "KSolv", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Landus", "phone": "", "email": "", "contact": "", "bill_address": "1095 T Avenue Boone IA 50036", "ship_address": "1095 T Avenue Boone IA 50036"}, {"name": "LES PLASTIQUES DC INC.", "phone": "", "email": "", "contact": "LES PLASTIQUES DC INC.", "bill_address": "5480-1 Boul. Industriel, Waterloo, QcJ0E 2N0, Canada", "ship_address": "5480-1 Boul. Industriel, Waterloo, QcJ0E 2N0, Canada"}, {"name": "Lionel's Drums, Pallets & Totes, Corp", "phone": "", "email": "", "contact": "", "bill_address": "15334 Southwood Trace Lane Houston TX 77049", "ship_address": "15334 Southwood Trace Lane Houston TX 77049"}, {"name": "Loveland", "phone": "", "email": "", "contact": "Loveland", "bill_address": "P.O. Box 660145Dallas, TX, 75266, US", "ship_address": "P.O. Box 660145Dallas, TX, 75266, US"}, {"name": "M-Con Solutions", "phone": "Phone:(417) 322-6424", "email": "mattc@m-consolutions.com", "contact": "", "bill_address": "2585 S Chapel Drive Springfield MO 65809", "ship_address": "2585 S Chapel Drive Springfield MO 65809"}, {"name": "Master Builders Solutions Construction Systems US, LLC", "phone": "", "email": "", "contact": "", "bill_address": "889 Valley Park DriveShakopee, MN USA 55379", "ship_address": "889 Valley Park DriveShakopee, MN USA 55379"}, {"name": "MBCC Group", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "McKenzie Begin and Associates", "phone": "", "email": "", "contact": "McKenzie Begin and Associates", "bill_address": "Division of K & S McKenzie Ltd.Suite 201-701 Pembina HighwayWinnipeg, MB R3M 2L7", "ship_address": "Division of K & S McKenzie Ltd.Suite 201-701 Pembina HighwayWinnipeg, MB R3M 2L7"}, {"name": "Microsource", "phone": "", "email": "", "contact": "", "bill_address": "7632 Country Road 101 Shakopee MN 55379", "ship_address": "7632 Country Road 101 Shakopee MN 55379"}, {"name": "Mike Harding", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Mitchell Container Services", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Mitten", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Nano Hafa LLC and HaFa Industries Inc.", "phone": "Mobile:308-44-4622", "email": "cbeezley@goithafa.com", "contact": "", "bill_address": "PO Box 3046 Kearney NE 68848", "ship_address": "PO Box 3046 Kearney NE 68848"}, {"name": "Neighbor Distribution, Inc.", "phone": "", "email": "", "contact": "Neighbor Distribution, Inc.", "bill_address": "PO Box 31261St. Louis, MO 63131-0261", "ship_address": "PO Box 31261St. Louis, MO 63131-0261"}, {"name": "NEW VISION TRANSPORTATION SVCS.,INC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Next Day Container", "phone": "", "email": "", "contact": "", "bill_address": "5935 N. 9th Street Delphi IN 46923", "ship_address": "5935 N. 9th Street Delphi IN 46923"}, {"name": "Nutrien Ag Solutions", "phone": "", "email": "", "contact": "Nutrien", "bill_address": "PO Box 660127 Dallas TX 75266", "ship_address": "PO Box 660127 Dallas TX 75266"}, {"name": "Obsidian Chemical Solutions", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Odom Industries", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Omni Polymers Intl Corp.", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Oro Agri - Rovensa Next", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Pack Depot Container", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1270 Fairhope AL 36532", "ship_address": "PO Box 1270 Fairhope AL 36532"}, {"name": "Pencco, Inc.", "phone": "Phone:(979) 885-0005", "email": "AP@pencco.com", "contact": "", "bill_address": "P.O. Box 600 San Felipe TX 77473", "ship_address": "P.O. Box 600 San Felipe TX 77473"}, {"name": "Permian Basin Container", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "PERRYTON EQUITY EXCHANGE", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 889, 4219 S MAIN PERRYTON TX 79070", "ship_address": "PO BOX 889, 4219 S MAIN PERRYTON TX 79070"}, {"name": "phoenix flooring", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Pinnacle Resources Inc.", "phone": "", "email": "", "contact": "", "bill_address": "5504 Jefferson Pkwy. Pine Bluff AR 71602", "ship_address": "5504 Jefferson Pkwy. Pine Bluff AR 71602"}, {"name": "Pipeline Packaging", "phone": "", "email": "invoices_receiving@pipelinepackaging.com", "contact": "", "bill_address": "100 Executive Parkway Hudson OH 44236 USA", "ship_address": "100 Executive Parkway Hudson OH 44236 USA"}, {"name": "Plant Nuco", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Plasmine Technology", "phone": "", "email": "", "contact": "", "bill_address": "3298-35 Summit Blvd Pensecola FL 32503", "ship_address": "3298-35 Summit Blvd Pensecola FL 32503"}, {"name": "Platte Chemical Co", "phone": "", "email": "LPIAP@nutrien.com", "contact": "pla", "bill_address": "P.O. Box 660145 Dallas TX 75266", "ship_address": "P.O. Box 660145 Dallas TX 75266"}, {"name": "Precision Dynamics, INC", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1595 Burleson TX 76097", "ship_address": "PO Box 1595 Burleson TX 76097"}, {"name": "PRECISION IBC, INC", "phone": "", "email": "terra@precisionibc.com", "contact": "", "bill_address": "8054 McGowin Dr Fairhope AL 36532", "ship_address": "8054 McGowin Dr Fairhope AL 36532"}, {"name": "Presley Enterprises", "phone": "", "email": "", "contact": "", "bill_address": "3181 State Highway BB Sikeston MO 63801", "ship_address": "3181 State Highway BB Sikeston MO 63801"}, {"name": "PRO CO-OP", "phone": "", "email": "", "contact": "", "bill_address": "SCOBEY MT", "ship_address": "SCOBEY MT"}, {"name": "ProTank", "phone": "", "email": "", "contact": "", "bill_address": "8971 Yahweh Dr. Olive Branch MS 38654", "ship_address": "8971 Yahweh Dr. Olive Branch MS 38654"}, {"name": "Quanta Containers, LLC", "phone": "", "email": "", "contact": "", "bill_address": "15801 Huron St. Taylor MI 48180", "ship_address": "15801 Huron St. Taylor MI 48180"}, {"name": "Ralco Nutrition", "phone": "", "email": "", "contact": "", "bill_address": "100 W. College Dr. Suite 200 Marshall MN 56258", "ship_address": "100 W. College Dr. Suite 200 Marshall MN 56258"}, {"name": "Research Solutions", "phone": "", "email": "", "contact": "", "bill_address": "100 Tony Holmes Drive Pelham AL 35124", "ship_address": "100 Tony Holmes Drive Pelham AL 35124"}, {"name": "Responsible Container", "phone": "", "email": "", "contact": "Responsible  Container", "bill_address": "5300 Hall St. St. Louis. MO, 63147", "ship_address": "5300 Hall St. St. Louis. MO, 63147"}, {"name": "Rivas Logistics LLC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Rosen's INC", "phone": "", "email": "rosensap@riw2000.com", "contact": "", "bill_address": "1120 Lake Avenue PO Box 933 Fairmont MN 56031", "ship_address": "1120 Lake Avenue PO Box 933 Fairmont MN 56031"}, {"name": "Rosen's Inc.", "phone": "", "email": "", "contact": "", "bill_address": "1120 Lake Avenue  PO Box 933 Fairmont MN 56031", "ship_address": "1120 Lake Avenue  PO Box 933 Fairmont MN 56031"}, {"name": "RRG", "phone": "", "email": "", "contact": "RRG", "bill_address": "", "ship_address": ""}, {"name": "Shotwell Hydrogenics", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Sigma Recycling Inc.", "phone": "", "email": "", "contact": "Sigma Recycling Inc.", "bill_address": "5675 JIMMY CARTER BLVDSUITE 598,NORCROSS, GA - 30071", "ship_address": "5675 JIMMY CARTER BLVDSUITE 598,NORCROSS, GA - 30071"}, {"name": "Sika Corporation", "phone": "", "email": "AccountsPayable@us.sika.com", "contact": "", "bill_address": "PO Box 710 Lyndhurst NJ 07071-0710", "ship_address": "PO Box 710 Lyndhurst NJ 07071-0710"}, {"name": "Simplot", "phone": "", "email": "", "contact": "Simplot", "bill_address": "1702 Levelland Hwy, Brownfield, TX 79316Attn: Dottie Mayesdottie.mayes@simplot.com806.456.7210", "ship_address": "1702 Levelland Hwy, Brownfield, TX 79316Attn: Dottie Mayesdottie.mayes@simplot.com806.456.7210"}, {"name": "Skyland Grain", "phone": "", "email": "", "contact": "Skyland  Grain", "bill_address": "PO BOX 129BUSHLAND TX 79012", "ship_address": "PO BOX 129BUSHLAND TX 79012"}, {"name": "SNRG Resources, INC.", "phone": "", "email": "", "contact": "SNRG Resources, INC.", "bill_address": "PO Box 2151 Foley, AL 36536", "ship_address": "PO Box 2151 Foley, AL 36536"}, {"name": "Sound Resource Solutions, LLC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Southern Container", "phone": "", "email": "", "contact": "Southern  Container", "bill_address": "340 Howell Drive Dalton, GA 30721", "ship_address": "340 Howell Drive Dalton, GA 30721"}, {"name": "SPADECHEM LLC", "phone": "", "email": "rushilshah@spadechem.com", "contact": "", "bill_address": "80 MARTIN LN, ELK GROVE VILLAGE IL 60007", "ship_address": "80 MARTIN LN, ELK GROVE VILLAGE IL 60007"}, {"name": "SpecChem", "phone": "", "email": "invoice@specchem.com", "contact": "", "bill_address": "1511 Baltimore Avenue, Ste. 600 Kansas City MO 64108", "ship_address": "1511 Baltimore Avenue, Ste. 600 Kansas City MO 64108"}, {"name": "Specialty Adhesives & Coatings", "phone": "", "email": "", "contact": "Specialty Adhesives & Coatings", "bill_address": "PO BOX 18445Memphis, TN 38181-0445", "ship_address": "PO BOX 18445Memphis, TN 38181-0445"}, {"name": "Specialty Ag Formulations", "phone": "", "email": "", "contact": "", "bill_address": "1658 Mission Ave. Aurora NE 68818", "ship_address": "1658 Mission Ave. Aurora NE 68818"}, {"name": "Spectrum Adhesives", "phone": "", "email": "", "contact": "", "bill_address": "5611 Universal Drive Memphis TN 38118", "ship_address": "5611 Universal Drive Memphis TN 38118"}, {"name": "Star of the West Milling Company", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Steve Strba Consulting Inc", "phone": "", "email": "strbaconsulting@gmail.com", "contact": "", "bill_address": "27 Paisley Avenue North Hamilton Ontario L8S 4G5 Canada", "ship_address": "27 Paisley Avenue North Hamilton Ontario L8S 4G5 Canada"}, {"name": "Steve Strba Consulting INC.", "phone": "", "email": "", "contact": "", "bill_address": "27 Paisley Avenue North Hamilton, ON   Canada", "ship_address": "27 Paisley Avenue North Hamilton, ON   Canada"}, {"name": "Superior Tote Solutions", "phone": "", "email": "", "contact": "Superior Tote Solutions", "bill_address": "401 North Main StreetSummitville, IN 46070", "ship_address": "401 North Main StreetSummitville, IN 46070"}, {"name": "TBK One LLC", "phone": "Phone:(940) 577-1766", "email": "accounting@tbk-one.com", "contact": "", "bill_address": "11425 Mathis Ave STE 507 Farmers Branch TX 75234 USA", "ship_address": "11425 Mathis Ave STE 507 Farmers Branch TX 75234 USA"}, {"name": "Team Laboratory Chemical, LLC", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1467 Detroit Lakes MN 56502", "ship_address": "PO Box 1467 Detroit Lakes MN 56502"}, {"name": "TED LEVINE DRUM COMPANY", "phone": "Phone:(626) 579-1084", "email": "david@tldrumco.com", "contact": "", "bill_address": "1817 CHICO AVENUE SO. EL MONTE CA 91733", "ship_address": "1817 CHICO AVENUE SO. EL MONTE CA 91733"}, {"name": "Texas Tank Works, Terrell", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 918 Terrell TX 75160", "ship_address": "PO BOX 918 Terrell TX 75160"}, {"name": "Texas Tote Works-Odessa", "phone": "", "email": "mbriggs@permiancontainers.com", "contact": "", "bill_address": "16691 Basin St Odessa TX 79763", "ship_address": "16691 Basin St Odessa TX 79763"}, {"name": "The Andersons", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 119 1947 Briarfield Blvd. Maumee OH 43537", "ship_address": "PO Box 119 1947 Briarfield Blvd. Maumee OH 43537"}, {"name": "The Cary Company", "phone": "", "email": "", "contact": "", "bill_address": "1195 W. Fullerton Ave. Addison IL 60101", "ship_address": "1195 W. Fullerton Ave. Addison IL 60101"}, {"name": "The Way, Inc", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Tote Detailing", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Transchemical", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Tri-Rinse", "phone": "", "email": "", "contact": "", "bill_address": "1402 S. 2nd Street St. Louis MO 63104", "ship_address": "1402 S. 2nd Street St. Louis MO 63104"}, {"name": "Unique Environmental Service Inc.", "phone": "", "email": "", "contact": "Unique Environmental Service Inc.", "bill_address": "935 Sandy Beach Road Pickering, ON L1W 1Z5", "ship_address": "935 Sandy Beach Road Pickering, ON L1W 1Z5"}, {"name": "United Container Group LLC -customer", "phone": "", "email": "", "contact": "", "bill_address": "251 Industrial Loop Hillsboro TX 76645", "ship_address": "251 Industrial Loop Hillsboro TX 76645"}, {"name": "Vallen Belmont, NC", "phone": "", "email": "", "contact": "Vallen Belmont, NC", "bill_address": "2100 The Oaks ParkwyBelmont, NC 28012", "ship_address": "2100 The Oaks ParkwyBelmont, NC 28012"}, {"name": "Vantage Specialties, Inc.", "phone": "", "email": "", "contact": "Vantage Specialties, Inc.", "bill_address": "4650 South Racine AveChicago, IL 60609", "ship_address": "4650 South Racine AveChicago, IL 60609"}, {"name": "VRC Technologies, Inc.", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Water Tech", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Webb Chemical", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Wells Ag Supply", "phone": "", "email": "", "contact": "Wells Ag Supply", "bill_address": "55560 150th AvenueFonda, IA 50540", "ship_address": "55560 150th AvenueFonda, IA 50540"}, {"name": "West Drum & Container", "phone": "Phone:(903) 643-7001", "email": "twest@westdrum.com", "contact": "", "bill_address": "5124 Estes PKWY Longview TX 75603", "ship_address": "5124 Estes PKWY Longview TX 75603"}, {"name": "Wilbur Elis Dalhart TX", "phone": "", "email": "PDominguez@wilburellis.com", "contact": "", "bill_address": "3325 Spur 24 Dalhart TX 79022", "ship_address": "3325 Spur 24 Dalhart TX 79022"}, {"name": "Wilbur Ellis", "phone": "", "email": "", "contact": "", "bill_address": "265 IH-35 South Devine TX 78016", "ship_address": ""}, {"name": "Winfield United", "phone": "", "email": "", "contact": "Winfield  United", "bill_address": "1834 West Point Road West Point, Iowa 52656", "ship_address": "1834 West Point Road West Point, Iowa 52656"}];
+
+// -- VENDOR DATA ------------------------------------------------------------
+const VENDORS = {
+  core_houston:{name:"MPH United / Core -- Houston, TX",address:"8203 Market Street\nHouston, TX 77029",contact:"Krish",phone:"510-361-8467",email:"",dockHours:"Call Krish for dock times. Have MPH PO# for reference.",notes:"Bottles only.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",pn:"",price:""},{desc:"IBC Bottle 330 Gal -- New",pn:"",price:""}]},
+  core_nashua:{name:"MPH United / Core -- Nashua, IA",address:"69 Maple St\nNashua, IA 50658",contact:"Brijesh Singh / Shaun Randle",phone:"832-933-7488 / 832-773-0732",email:"",dockHours:"Warehouse ONLY -- NOT MANNED. Frontline calls to confirm order at Waterloo or Nashua.",notes:"Mainly 330 bottles. Not manned -- been known to divert drivers without notice.",leadContact:"Christina Bayne / Keith",products:[{desc:"IBC Bottle 330 Gal -- New | Valve-BV-AG QD VITON | Lid-6\" BLACK EPDM 2\" AG BUNG (NO CS) | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE OR STEEL",pn:"10330GNX00000FG",price:""},{desc:"IBC 275 Gal New L3 FLUORINATED | Valve-BV-AG QD VITON | Lid-6\" BLACK EPDM 2\" AG BUNG (NO CS) | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE OR STEEL",pn:"10275GNX00026FG",price:""},{desc:"IBC 135 Gal New L3 FLUORINATED | Valve-BV-AG QD VITON | Lid-6\" BLACK EPDM 2\" AG BUNG (NO CS) | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE OR STEEL",pn:"10135GNX00009FG",price:""}]},
+  core_shreveport:{name:"MPH United / Core -- Shreveport, LA",address:"3460 Hollywood Ave\nShreveport, LA 71108",contact:"Rajiv Mudaliar",phone:"318-774-1728",email:"Rajiv.mudaliar@coreplastech.com / Logistics.shreveport@coreplastech.com",dockHours:"Also contact Darrell 318-570-9911. CC Amol Deshmukh on Rajiv emails.",notes:"(!) WORST PLANT -- Never has anything ready. Do NOT put customer name on load. Also uses Frontline.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC 275 Gal -- New | Valve-BV QD VITON | Lid-6\" BLACK EPDM 2\" NON-VENTED BUNG RED CS | Placards(2)-METAL FRONT PLASTIC BACK | Pallet-COMPOSITE OR STEEL",pn:"10275GNX00115FG",price:""},{desc:"IBC 275 Gal -- New | Valve-BF QD PE | Lid-6\" BLACK EPDM 2\" NON-VENTED BUNG RED CS | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE ONLY",pn:"10275GNX00185FG",price:""},{desc:"IBC 330 Gal -- New",pn:"",price:""},{desc:"55 Gal Tight Head Drum -- New",pn:"",price:""}]},
+  core_southholland:{name:"MPH United / Core -- South Holland, IL",address:"15555 La Salle St\nSouth Holland, IL 60473",contact:"Albert Ibbara / Anish Kothawale",phone:"702-366-4153 / 318-963-7867",email:"",dockHours:"Call for dock times.",notes:"Bottles only. Butterfly valve spec bottle -- Alliance can also supply.",leadContact:"Christina Bayne / Keith",products:[{desc:"IBC Bottle 275 Gal -- Butterfly Valve",pn:"",price:""},{desc:"IBC Bottle 330 Gal -- New",pn:"",price:""}]},
+  core_waterloo:{name:"MPH United / Core -- Waterloo, IA",address:"1575 W Big Rock\nWaterloo, IA 50703",contact:"Shaun Randle",phone:"832-773-0732",email:"",dockHours:"First come, first serve. 7:00am-3:00pm, be there by 2:00pm.",notes:"New Units: 135, 275, 330 gal IBCs; 55 gal tight head drum. Do NOT put customer name on load.",leadContact:"Christina Bayne / Keith",products:[{desc:"IBC 135 Gal -- New | Valve-BV-AG QD VITON | Lid-6\" BLACK EPDM 2\" AG BUNG (NO CS) | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE OR STEEL",pn:"10135GNXR00003FG",price:""},{desc:"IBC 275 Gal -- New | Valve-BV-AG QD VITON | Lid-6\" BLACK EPDM 2\" AG BUNG (NO CS) | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE OR STEEL",pn:"10275GNX00023FG",price:""},{desc:"IBC 275 Gal -- New | Valve-BV QD VITON | Lid-6\" BLACK EPDM 2\" VENTED MICROPOROUS BUNG YELLOW CS | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE OR STEEL",pn:"10275GNX00024FG",price:""},{desc:"IBC 330 Gal -- New | Valve-BV-AG QD VITON | Lid-6\" BLACK EPDM 2\" AG BUNG (NO CS) | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE OR STEEL",pn:"10330GNX00000FG",price:""},{desc:"55 Gal Tight Head Drum -- New",pn:"",price:""}]},
+  core_calhoun:{name:"MPH United / Core -- Calhoun, GA",address:"185 East Rus Drive\nCalhoun, GA 30701",contact:"Raj Das",phone:"832-837-5104",email:"raj@coreplastech.com",dockHours:"S/R Hours: 7am-3pm, first come/first serve.",notes:"New plant opened July 2025. 275 & 330 gal Bottles & IBCs, poly drums.",leadContact:"Keith Ferrell",products:[{desc:"IBC 275 Gal -- New",pn:"",price:""},{desc:"IBC 330 Gal -- New",pn:"",price:""},{desc:"Poly Drum -- New",pn:"",price:""}]},
+  alliance_greenwood:{name:"MPH United / Alliance Container -- Greenwood, IN",address:"2615 Endress Place\nGreenwood, IN 46143",contact:"Mike McGuire",phone:"765-243-1936",email:"michael@ac-ibc.com",dockHours:"8:00am-2:00pm. Have MPH Load# for reference. Jessica Redden sends signed BOLs.",notes:"IBC Bottles only 275 & 330. Own trucks within 100 miles. Outside local = Frontline. Under same roof as STS rebottle.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC Bottle 275 Gal -- New",price:""},{desc:"IBC Bottle 330 Gal -- New",price:""}]},
+  alliance_hillsboro:{name:"MPH United / Alliance Container Texas -- Hillsboro, TX",address:"251 Industrial Loop\nHillsboro, TX 76645",contact:"Isabel Martinez",phone:"832-721-3423",email:"iguevara@alliance-ctx.com",dockHours:"8:30-10:00am & 12:30-4:00pm. (!) CLOSED 11am-12pm for lunch. Email for dock appointment.",notes:"IBC Bottles only 275 & 330. Building split: Front = Alliance new bottles; Back = United Container Group rebottle.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",price:""},{desc:"IBC Bottle 330 Gal -- New",price:""}]},
+  fivestar_bristow:{name:"MPH United / 5 Star Industrial Containers -- Bristow, OK",address:"502 Industrial Road\nBristow, OK 74010",contact:"Luis Rodriguez",phone:"469-543-8284",email:"lrodriguez@permiancontainers.com",dockHours:"Call for dock times. Has own trucks.",notes:"Washout & Rebottle 275 & 330. Arnaldo Sr plant. Keeps MPH stock (AgChem bottles, drums, 5 gal jerrycans).",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
+  sec_cleveland:{name:"MPH United / SEC SouthEast Container -- Cleveland, MS",address:"1002 Charlie Capps Road\nCleveland, MS 38732",contact:"Luis Rodriguez / Juan (plant lead)",phone:"469-543-8284",email:"lrodriguez@permiancontainers.com",dockHours:"First come, first serve: 7am-12pm and 1pm-4pm. Lunch 12pm-1pm.",notes:"Washout & Rebottle 275 gal. New plant May 2025. Keeps MPH bottle stock. (!) Correct zip is 38732 (not 38759).",leadContact:"Christina Bayne 251-978-0563",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""}]},
+  gpc_gardencity:{name:"MPH United / GPC Great Plains Container -- Garden City, KS",address:"2203 Humphrey Road\nGarden City, KS 67846",contact:"Luis Rodriguez",phone:"469-543-8284",email:"lrodriguez@greatplainscontainers.com",dockHours:"S/R Hours: 7am-4pm.",notes:"Washout & Rebottle 135, 275, 330 gal. New plant Feb 2025. Keeps MPH stock (bottle and new 135g IBCs).",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 135 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""}]},
+  sts_greenwood:{name:"MPH United / STS Superior Tote Solutions -- Greenwood, IN",address:"2615 Endress Place\nGreenwood, IN 46143",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com",dockHours:"8:00am-2:00pm.",notes:"Rebottle 275 & 330. Under same roof as Alliance. Own trucks within 100 miles. Outside local = Frontline.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""}]},
+  ucg_hillsboro:{name:"MPH United / United Container Group -- Hillsboro, TX",address:"251 Industrial Loop, Building B\nHillsboro, TX 76645",contact:"AJ Ibarra",phone:"281-515-2104",email:"ajibarra@permiancontainers.com",dockHours:"By appointment. 8:00am-4:00pm. Lunch 12pm-1pm.",notes:"Washout & Rebottle 275 & 330. Arnaldo Sr plant. Back side of building. Has own trucks. When ordering rebottles MPH orders bottles from Alliance.",leadContact:"Christina Bayne 251-978-0563",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
+  ttw_odessa:{name:"MPH United / TTW Texas Tote Works -- Odessa, TX",address:"16691 W Basin Street\nOdessa, TX 79763",contact:"Carlos Montano",phone:"214-601-7576",email:"cmontano@unitedcontainergroup.com",dockHours:"Call for dock times. CC Carlos on all emails to Angela Madrazo angela@permiancontainers.com 432-703-7434.",notes:"Washout & Rebottle 275 & 330. New plant 1/2/25. Arnaldo Sr plant.",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
+  tld_socal:{name:"MPH United / TLD Ted Levine Drum Co -- South El Monte, CA",address:"1817 Chico Avenue\nSouth El Monte, CA 91733",contact:"Kim Jackson",phone:"626-579-1084 ext. 123",email:"kim@tldrumco.com",dockHours:"M-F 7am-2pm. Frontline needs appt from Kim Jackson.",notes:"Rebottle & Washout 135/275/330; 275 rebottle. Steel & poly drum washout. Not a partner -- vendor only. Only customer is DeLaval 275s.",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC Washout",price:""},{desc:"Steel/Poly Drum -- Washout",price:""}]},
+  rrg_stanwood:{name:"MPH United / RRG Rural Recycling & Grinding -- Stanwood, IA",address:"101 Forest Street\nStanwood, IA 52337",contact:"Michelle McCall",phone:"319.360.4571",email:"admin@recyclinggrinding.com",dockHours:"Own trucks as needed, otherwise Frontline. Larry McCall backs up Michelle.",notes:"Rebottle 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""}]},
+  clean_stlouis:{name:"MPH United / Clean Environmental -- St. Louis, MO",address:"4500 Fyler Ave\nSt. Louis, MO 63116",contact:"Tommy Hudson / Breana Rice",phone:"513-652-1903 / 314-775-1779",email:"brice@cleanenvironmentalmanagementllc.com",dockHours:"(!) EMAIL BREANA (not Tommy). Mon-Thurs 6:30am-1:30pm. Friday by approval only 6:30-10:30am. Warehouse UNMANNED as of Aug 2025.",notes:"Washout & Rebottle 275 & 330, 55 gal TH poly drums. Secondary unmanned location: 3211 S Kingshighway Blvd -- must call before delivery.",leadContact:"Suzanne Ridenhour 251.413.6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"55 Gal TH Poly Drum -- Washout",price:""}]},
+  sts_summitville:{name:"MPH United / STS Superior Tote Solutions -- Summitville, IN",address:"401 North Main Street\nSummitville, IN 46070",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com",dockHours:"Own trucks within 100 miles.",notes:"Washout 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Washout",price:""}]},
+  centurion_lewisburg:{name:"MPH United / Centurion -- Lewisburg, TN",address:"671 Garrett Parkway\nLewisburg, TN 37091",contact:"Mike Wade",phone:"931-619-1024",email:"",dockHours:"(!) CPU ONLY",notes:"Washout 275 & 330. CPU ONLY. FKA Enterprize -- purchased by Greif 2025.",leadContact:"Suzanne Ridenour 251-413-6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
+  centurion_memphis:{name:"MPH United / Centurion -- Memphis, TN",address:"285 Trigg Avenue\nMemphis, TN 38106",contact:"Mike Wade",phone:"931-619-1024",email:"",dockHours:"(!) CPU ONLY",notes:"Washout 275 & 330. CPU ONLY. FKA Enterprize -- purchased by Greif 2025. Typically uses Core Waterloo bottles (work better in cages than Alliance).",leadContact:"Suzanne Ridenour 251.413.6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
+  coastal_alvin:{name:"MPH United / Coastal Container Services -- Alvin, TX",address:"892 County Road 281\nAlvin, TX 77511",contact:"Steve Krause / Tommy Spalding",phone:"409-599-2120 / 903-275-6213",email:"orders@ccontainertx.com",dockHours:"Send order notifications to orders@ccontainertx.com",notes:"Drum recycling only.",leadContact:"Jack Schlaack 517-881-8309",products:[{desc:"Drum Recycle Service",price:""}]}
+};
+
+// -- STATE -----------------------------------------------------------------
+let generatedEmails = [];
+let mphPONum = '';
+let selectedCustomer = null;
+let dropdownTimer = null;
+
+// -- INIT ------------------------------------------------------------------
+document.getElementById('orderDate').valueAsDate = new Date();
+buildDropdown('');
+// Initialize with one empty row
+(function() {
+  const body = document.getElementById('lineBody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = makeRowHTML('', '', '', false);
+  body.appendChild(tr);
+})();
+
+// -- CUSTOMER SEARCH -------------------------------------------------------
+function buildDropdown(query) {
+  const dd = document.getElementById('customerDropdown');
+  const q = query.toLowerCase().trim();
+  const filtered = q ? CUSTOMERS.filter(c => c.name.toLowerCase().includes(q)) : CUSTOMERS;
+  
+  if (filtered.length === 0) {
+    dd.innerHTML = '<div class="customer-option no-results">No customers found</div>';
+  } else {
+    dd.innerHTML = filtered.slice(0, 50).map(c => {
+      const sub = c.email ? c.email.split(',')[0] : (c.ship_address ? c.ship_address.slice(0, 40) : '');
+      return `<div class="customer-option" onmousedown="selectCustomer('${c.name.replace(/'/g,"\\'")}')">
+        ${c.name}${sub ? `<div class="opt-sub">${sub}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+}
+
+function filterCustomers() {
+  buildDropdown(document.getElementById('customerSearch').value);
+  showDropdown();
+}
+
+function showDropdown() {
+  buildDropdown(document.getElementById('customerSearch').value);
+  document.getElementById('customerDropdown').classList.add('open');
+}
+
+function hideDropdown() {
+  dropdownTimer = setTimeout(() => {
+    document.getElementById('customerDropdown').classList.remove('open');
+  }, 200);
+}
+
+function selectCustomer(name) {
+  clearTimeout(dropdownTimer);
+  const customer = CUSTOMERS.find(c => c.name === name);
+  if (!customer) return;
+  selectedCustomer = customer;
+  document.getElementById('customerSearch').value = customer.name;
+  document.getElementById('selectedCustomerName').value = customer.name;
+  document.getElementById('customerDropdown').classList.remove('open');
+
+  // Fill fields
+  if (customer.email) document.getElementById('customerEmail').value = customer.email.split(',')[0].trim();
+  if (customer.ship_address) document.getElementById('shipTo').value = customer.ship_address;
+
+  // Show card
+  const card = document.getElementById('customerCard');
+  document.getElementById('ccName').textContent = customer.name;
+  let details = '';
+  if (customer.phone) details += `<strong>Phone:</strong> ${customer.phone}<br>`;
+  if (customer.email) details += `<strong>Email:</strong> ${customer.email}<br>`;
+  if (customer.contact) details += `<strong>Contact:</strong> ${customer.contact}<br>`;
+  if (customer.ship_address) details += `<strong>Ship To:</strong> ${customer.ship_address.slice(0,60)}...`;
+  document.getElementById('ccDetail').innerHTML = details || 'Record loaded -- check fields below.';
+  card.classList.add('active');
+}
+
+// -- VENDOR LOAD -----------------------------------------------------------
+const CORE_VENDOR_KEYS = ['core_houston','core_nashua','core_shreveport','core_southholland','core_waterloo','core_calhoun'];
+
+function isCore(key) { return CORE_VENDOR_KEYS.includes(key); }
+
+function setPNVisible(show) {
+  document.querySelectorAll('.pn-col').forEach(el => el.classList.toggle('visible', show));
+  const head = document.getElementById('pnHead');
+  if (head) head.classList.toggle('visible', show);
+}
+
+function buildChips(products, vendorKey) {
+  const wrap = document.getElementById('chipsWrap');
+  const chips = document.getElementById('productChips');
+  if (!products || products.length === 0) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  chips.innerHTML = products.map((p, i) =>
+    `<span class="product-chip" onclick="addChipProduct('${p.desc.replace(/'/g,"\\'")}','${(p.pn||'').replace(/'/g,"\\'")}','${(p.price||'').replace(/'/g,"\\'")}',this)">${p.desc}</span>`
+  ).join('');
+}
+
+function addChipProduct(desc, pn, price, chipEl) {
+  const body = document.getElementById('lineBody');
+  const coreVisible = isCore(document.getElementById('vendorSelect').value);
+  const tr = document.createElement('tr');
+  tr.innerHTML = makeRowHTML(desc, pn, price, coreVisible);
+  body.appendChild(tr);
+  // Flash chip green briefly
+  chipEl.classList.add('added');
+  setTimeout(() => chipEl.classList.remove('added'), 700);
+}
+
+function makeRowHTML(desc, pn, price, showPN) {
+  const pnCell = `<td class="pn-col${showPN?' visible':''}"><input type="text" class="li-pn" value="${pn||''}" placeholder="Part #" style="width:100%;background:transparent;border:1px solid transparent;border-radius:4px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ink);padding:3px 5px;outline:none;transition:all 0.15s;" onfocus="this.style.borderColor='var(--gold)';this.style.background='white'" onblur="this.style.borderColor='transparent';this.style.background='transparent'"></td>`;
+  return `<td><input type="text" class="li-desc" value="${desc||''}" placeholder="Product description"></td>${pnCell}<td><input type="number" class="li-qty" placeholder="0" min="0"></td><td><input type="number" class="li-price" value="${price||''}" placeholder="0.00" step="0.01" min="0"></td><td><button class="btn-remove" onclick="removeRow(this)">×</button></td>`;
+}
+
+function loadVendor() {
+  const key = document.getElementById('vendorSelect').value;
+  if (!key || !VENDORS[key]) {
+    document.getElementById('vendorCard').classList.remove('active');
+    document.getElementById('chipsWrap').style.display = 'none';
+    setPNVisible(false);
+    return;
+  }
+  const v = VENDORS[key];
+  document.getElementById('vcName').textContent = v.name;
+  document.getElementById('vcDetail').innerHTML =
+    `<strong>Address:</strong> ${v.address.replace(/\n/g,'<br>')}<br>` +
+    `<strong>Contact:</strong> ${v.contact} -- ${v.phone}<br>` +
+    (v.email ? `<strong>Email:</strong> ${v.email}<br>` : '') +
+    `<strong>Dock:</strong> ${v.dockHours}<br>` +
+    `<strong>Lead/Tech:</strong> ${v.leadContact}<br>` +
+    `<strong>Notes:</strong> ${v.notes}`;
+  document.getElementById('vendorCard').classList.add('active');
+
+  const coreVendor = isCore(key);
+  setPNVisible(coreVendor);
+  buildChips(v.products, key);
+
+  // Reset line body to one clean empty row
+  const body = document.getElementById('lineBody');
+  body.innerHTML = '';
+  const tr = document.createElement('tr');
+  tr.innerHTML = makeRowHTML('', '', '', coreVendor);
+  body.appendChild(tr);
+}
+
+// -- LINE ITEMS ------------------------------------------------------------
+function addRow() {
+  const coreVisible = isCore(document.getElementById('vendorSelect').value);
+  const tr = document.createElement('tr');
+  tr.innerHTML = makeRowHTML('', '', '', coreVisible);
+  document.getElementById('lineBody').appendChild(tr);
+}
+
+function removeRow(btn) {
+  if (document.querySelectorAll('#lineBody tr').length > 1) btn.closest('tr').remove();
+}
+
+function getLines() {
+  return Array.from(document.querySelectorAll('#lineBody tr')).map(r => ({
+    desc: r.querySelector('.li-desc').value || 'IBC Product',
+    pn: r.querySelector('.li-pn') ? r.querySelector('.li-pn').value.trim() : '',
+    qty: parseFloat(r.querySelector('.li-qty').value) || 0,
+    price: parseFloat(r.querySelector('.li-price').value) || 0
+  })).filter(r => r.desc);
+}
+
+// -- HELPERS ---------------------------------------------------------------
+function fmtCur(n) { return n > 0 ? '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',') : '--'; }
+function fmtDate(v) { if (!v) return '--'; const d = new Date(v+'T00:00:00'); return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}); }
+function genPONum() { const n = new Date(); return `MPH-${String(n.getFullYear()).slice(2)}${String(n.getMonth()+1).padStart(2,'0')}-${String(Math.floor(Math.random()*9000)+1000)}`; }
+function setLoading(on, msg, sub) {
+  document.getElementById('loadingState').classList.toggle('active', on);
+  if (msg) document.getElementById('loadingMsg').textContent = msg;
+  if (sub) document.getElementById('loadingSub').textContent = sub;
+}
+
+// -- FILE UPLOAD HANDLER --------------------------------------------------
+
+
+// -- GENERATE PO -----------------------------------------------------------
+async function generatePO() {
+  const customerName = document.getElementById('customerSearch').value.trim() || document.getElementById('selectedCustomerName').value.trim();
+  const vendorKey = document.getElementById('vendorSelect').value;
+  if (!customerName) { alert('Please select or enter a customer name.'); return; }
+  if (!vendorKey) { alert('Please select a vendor.'); return; }
+
+  const vendor = VENDORS[vendorKey];
+  const lines = getLines();
+  const total = lines.reduce((s,l) => s+(l.qty*l.price), 0);
+  mphPONum = genPONum();
+
+  const order = {
+    customerName,
+    customerPO: document.getElementById('customerPO').value.trim() || 'N/A',
+    orderDate: fmtDate(document.getElementById('orderDate').value),
+    shipTo: document.getElementById('shipTo').value.trim() || '--',
+    customerEmail: document.getElementById('customerEmail').value.trim(),
+    shipDate: fmtDate(document.getElementById('shipDate').value),
+    shipVia: document.getElementById('shipVia').value,
+    paymentTerms: document.getElementById('paymentTerms').value,
+    salesPerson: '',
+    specialInstructions: document.getElementById('specialInstructions').value.trim(),
+    vendor, lines, total
+  };
+
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('poDocument').classList.remove('active');
+  try {
+  setLoading(true, 'Building PO & emails...', 'Please wait');
+    document.getElementById('generateBtn').disabled = true;
+    setTimeout(() => {
+      const productList = lines.map(l => ` - ${l.desc}${l.pn ? ' [P/N: '+l.pn+']' : ''}${l.qty ? ' x' + l.qty : ''}${l.price ? ' @ ' + fmtCur(l.price) : ''}`).join('\n');
+      const totalStr = total > 0 ? fmtCur(total) : 'TBD';
+      generatedEmails = [{
+        to: `${vendor.contact} <${vendor.email || vendor.phone}>`,
+        subject: `MPH United PO ${mphPONum} -- ${customerName} | Ship ${order.shipDate}`,
+        body: `Dear ${vendor.contact},
+
+Please find below Purchase Order ${mphPONum} from MPH United.
+
+ORDER DETAILS
+------------------
+MPH PO #: ${mphPONum}
+Customer PO #: ${order.customerPO}
+Order Date: ${order.orderDate}
+Required Ship: ${order.shipDate}
+Ship Via: ${order.shipVia}
+Payment Terms: ${order.paymentTerms}
+
+SHIP TO: ${order.customerName}
+${order.shipTo}
+
+PRODUCTS ORDERED:
+${productList}
+
+ORDER TOTAL: ${totalStr}
+${order.specialInstructions ? '\nSPECIAL INSTRUCTIONS:\n' + order.specialInstructions : ''}
+
+DOCK HOURS / NOTES: ${vendor.dockHours}
+${vendor.notes}
+
+Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # ${mphPONum} on all correspondence and shipping documents.
+
+Thank you,
+MPH United Operations`
+      }, {
+        to: `${customerName} <${order.customerEmail || 'customer@email.com'}>`,
+        subject: `Order Confirmation -- MPH United PO ${mphPONum} | Customer PO ${order.customerPO}`,
+        body: `Dear ${customerName} Team,
+
+Thank you for your order. Please find your order confirmation below.
+
+ORDER CONFIRMATION
+------------------
+MPH PO #: ${mphPONum}
+Your PO #: ${order.customerPO}
+Order Date: ${order.orderDate}
+Expected Ship: ${order.shipDate}
+Ship Via: ${order.shipVia}
+Payment Terms: ${order.paymentTerms}
+
+SHIP TO: ${order.shipTo}
+
+ITEMS ORDERED:
+${productList}
+
+ORDER TOTAL: ${totalStr}
+${order.specialInstructions ? '\nNOTES: ' + order.specialInstructions : ''}
+
+We have placed this order with our vendor and will follow up with tracking information once your shipment is confirmed. Please do not hesitate to reach out with any questions.
+
+Thank you for your business,
+MPH United`
+      }];
+      setLoading(false);
+    renderPO(order);
+    generatedEmails.forEach((e,i) => renderEmailDiv(`emailDiv${i}`, e));
+    document.getElementById('poDocument').classList.add('active');
+    switchTab(0, document.querySelectorAll('.output-tab')[0]);
+  }, 300);
+  } catch(e) {
+    clearInterval(iv);
+    setLoading(false);
+    document.getElementById('emptyState').classList.remove('hidden');
+    alert('Error: ' + e.message);
+  }
+  document.getElementById('generateBtn').disabled = false;
+}
+
+// -- RENDER PO -------------------------------------------------------------
+function renderPO(o) {
+  const hasPN = o.lines.some(l => l.pn);
+  const linesHtml = o.lines.map(l => `<tr><td>${l.desc}${l.pn ? `<br><span style="font-size:10px;color:var(--gold);font-family:'IBM Plex Mono',monospace">P/N: ${l.pn}</span>` : ''}</td><td>${l.qty||'--'}</td><td>${fmtCur(l.price)}</td><td>${l.qty&&l.price?fmtCur(l.qty*l.price):'--'}</td></tr>`).join('');
+  document.getElementById('poPaper').innerHTML = `
+    <div class="po-top">
+      <div class="po-company" style="display:flex;align-items:center;gap:16px;"><img src="data:image/png;base64,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" style="width:72px;height:72px;object-fit:contain;"><h1>MPH UNITED</h1></div>
+      <div class="po-badge"><div class="po-title">PURCHASE ORDER</div><div class="po-number">${mphPONum}</div><div class="po-date">${o.orderDate}</div></div>
+    </div>
+    <div class="po-meta">
+      <div class="po-meta-box"><div class="po-meta-label">Vendor</div><div class="po-meta-value">${o.vendor.name}<br><span style="font-size:10px;color:var(--ink2)">${o.vendor.address.replace(/\n/g,'<br>')}</span><br><span style="font-size:10px;color:var(--ink2)">${o.vendor.contact} -- ${o.vendor.phone}</span></div></div>
+      <div class="po-meta-box"><div class="po-meta-label">Ship To -- ${o.customerName}</div><div class="po-meta-value" style="font-size:11px">${o.shipTo.replace(/\n/g,'<br>')}</div></div>
+      <div class="po-meta-box"><div class="po-meta-label">Customer PO #</div><div class="po-meta-value">${o.customerPO}</div></div>
+      <div class="po-meta-box"><div class="po-meta-label">Required Ship Date</div><div class="po-meta-value">${o.shipDate}</div></div>
+      <div class="po-meta-box"><div class="po-meta-label">Ship Via</div><div class="po-meta-value">${o.shipVia}</div></div>
+      <div class="po-meta-box"><div class="po-meta-label">Payment Terms</div><div class="po-meta-value">${o.paymentTerms}</div></div>
+      <div class="po-meta-box"><div class="po-meta-label">Dock Hours</div><div class="po-meta-value" style="font-size:10px">${o.vendor.dockHours}</div></div>
+    </div>
+    <table class="po-table">
+      <thead><tr><th>Product / Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+      <tbody>${linesHtml}</tbody>
+      <tfoot><tr><td colspan="3" class="total-label">Order Total</td><td class="total-val">${o.total>0?fmtCur(o.total):'TBD'}</td></tr></tfoot>
+    </table>
+    ${o.specialInstructions?`<div class="po-notes"><div class="po-notes-label">Special Instructions</div><div class="po-notes-text">${o.specialInstructions}</div></div>`:''}
+    <div class="po-sig"><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Authorized -- MPH United</div></div><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Vendor Acknowledgement</div></div></div>`;
+}
+
+function renderEmailDiv(id, e) {
+  document.getElementById(id).innerHTML = `
+    <div class="email-preview-header">
+      <div class="email-row"><span class="email-row-label">To</span><span class="email-row-val">${e.to}</span></div>
+      <div class="email-row"><span class="email-row-label">Subject</span><span class="email-row-val">${e.subject}</span></div>
+    </div>
+    <div class="email-preview-body">${e.body}</div>`;
+}
+
+function switchTab(idx, btn) {
+  document.querySelectorAll('.output-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.output-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.output-tab')[idx].classList.add('active');
+  document.getElementById('outPanel'+idx).classList.add('active');
+}
+
+function copyEl(id, btnId, reset) {
+  navigator.clipboard.writeText(document.getElementById(id).innerText);
+  const btn = document.getElementById(btnId);
+  btn.textContent='(ok) Copied!'; btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent=reset;btn.classList.remove('copied');},2000);
+}
+
+function copyEmail(idx, btnId) {
+  const e = generatedEmails[idx];
+  navigator.clipboard.writeText(`To: ${e.to}\nSubject: ${e.subject}\n\n${e.body}`);
+  const btn = document.getElementById(btnId);
+  btn.textContent='(ok) Copied!'; btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent='Copy Email';btn.classList.remove('copied');},2000);
+}
+</script>
+<!-- ADD CUSTOMER MODAL -->
+<div class="modal-overlay" id="customerModal">
+  <div class="modal">
+    <div class="modal-title">Add New Customer <button class="modal-close" onclick="closeModal('customerModal')">&#10005;</button></div>
+    <div class="modal-note">&#9889; Added for this session. Note details to share with your admin for permanent save.</div>
+    <div class="field"><label>Customer Name *</label><input type="text" id="nc_name" placeholder="e.g. Acme Chemical Co."></div>
+    <div class="field"><label>Contact Name</label><input type="text" id="nc_contact"></div>
+    <div class="field"><label>Email</label><input type="email" id="nc_email"></div>
+    <div class="field"><label>Phone</label><input type="text" id="nc_phone"></div>
+    <div class="field"><label>Ship-To Address</label><textarea id="nc_ship" placeholder="123 Main St&#10;City, State ZIP"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="closeModal('customerModal')">Cancel</button>
+      <button class="btn-modal-save" onclick="saveNewCustomer()">Add Customer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD VENDOR MODAL -->
+<div class="modal-overlay" id="vendorModal">
+  <div class="modal">
+    <div class="modal-title">Add New Vendor <button class="modal-close" onclick="closeModal('vendorModal')">&#10005;</button></div>
+    <div class="modal-note">&#9889; Added for this session. Note details to share with your admin for permanent save.</div>
+    <div class="field"><label>Vendor / Plant Name *</label><input type="text" id="nv_name" placeholder="Plant Name -- City, ST"></div>
+    <div class="field"><label>Address</label><textarea id="nv_address"></textarea></div>
+    <div class="field"><label>Contact Name</label><input type="text" id="nv_contact"></div>
+    <div class="field"><label>Phone</label><input type="text" id="nv_phone"></div>
+    <div class="field"><label>Email</label><input type="email" id="nv_email"></div>
+    <div class="field"><label>Dock Hours / Instructions</label><textarea id="nv_dock"></textarea></div>
+    <div class="field"><label>Notes</label><textarea id="nv_notes"></textarea></div>
+    <div class="field"><label>Lead Contact</label><input type="text" id="nv_lead"></div>
+    <div class="field"><label>Products (one per line)</label><textarea id="nv_products" placeholder="IBC 275 Gal&#10;IBC 330 Gal"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="closeModal('vendorModal')">Cancel</button>
+      <button class="btn-modal-save" onclick="saveNewVendor()">Add Vendor</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(function(o){
+  o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+});
+function saveNewCustomer(){
+  var name=document.getElementById('nc_name').value.trim();
+  if(!name){alert('Customer name is required.');return;}
+  CUSTOMERS.unshift({name:name,contact:document.getElementById('nc_contact').value.trim(),email:document.getElementById('nc_email').value.trim(),phone:document.getElementById('nc_phone').value.trim(),ship_address:document.getElementById('nc_ship').value.trim(),bill_address:''});
+  selectCustomer(name);
+  ['nc_name','nc_contact','nc_email','nc_phone','nc_ship'].forEach(function(id){document.getElementById(id).value='';});
+  closeModal('customerModal');
+}
+function saveNewVendor(){
+  var name=document.getElementById('nv_name').value.trim();
+  if(!name){alert('Vendor name is required.');return;}
+  var prods=document.getElementById('nv_products').value.trim();
+  var products=prods?prods.split('\n').filter(function(p){return p.trim();}).map(function(p){return {desc:p.trim(),price:''};}):[{desc:'Product',price:''}];
+  var key='custom_'+Date.now();
+  VENDORS[key]={name:name,address:document.getElementById('nv_address').value.trim(),contact:document.getElementById('nv_contact').value.trim()||'Contact',phone:document.getElementById('nv_phone').value.trim()||'--',email:document.getElementById('nv_email').value.trim(),dockHours:document.getElementById('nv_dock').value.trim()||'--',notes:document.getElementById('nv_notes').value.trim()||'--',leadContact:document.getElementById('nv_lead').value.trim()||'--',products:products};
+  var sel=document.getElementById('vendorSelect');
+  var grp=document.getElementById('customVendorGroup');
+  if(!grp){grp=document.createElement('optgroup');grp.label='Custom Added';grp.id='customVendorGroup';sel.appendChild(grp);}
+  var opt=document.createElement('option');opt.value=key;opt.textContent=name+' (custom)';grp.appendChild(opt);
+  sel.value=key;loadVendor();
+  ['nv_name','nv_address','nv_contact','nv_phone','nv_email','nv_dock','nv_notes','nv_lead','nv_products'].forEach(function(id){document.getElementById(id).value='';});
+  closeModal('vendorModal');
+}
+
+// ═══ MICROSOFT GRAPH — BROWSER LOGIN (MSAL) ════════════════════════════════
+
+const MSAL_CONFIG = {
+  auth: {
+    clientId: "a573e5f3-c7bb-43c7-89cb-9986fc01b84a",
+    authority: "https://login.microsoftonline.com/3abf2937-e518-43e5-b2a4-456eecfa8b00",
+    redirectUri: "https://davidharding92.github.io/neo/neo.html",
+  },
+  cache: { cacheLocation: "sessionStorage" }
+};
+
+const GRAPH_SCOPES  = ["Files.Read.All", "Sites.Read.All"];
+const DRIVE_ID      = "b!N48Wq05iEEOzX1swiNCEk8EKL-4bQeBMn0eOwmpi5atLWWczvFYQQrxH9feF-RUh";
+const FILE_NAME     = "MPH Orders.xlsm";
+const POLL_INTERVAL = 30000;
+
+const VENDOR_SHEETS = [
+  'Core-IBCS','Core-Bottles','Alliance-Greenwood','Alliance-Hillsboro',
+  'United Container','5 Star','GPC(Great Plains-Garden City)','Ted Levine Drum Co',
+  'TTW(Texas Tote Works)','SEC(SouthEast Container)','Clean Environmental',
+  'RRG(Rural Recycling Grinding)','STS(Superior Tote Solutions)','Centurion',
+  'FSC(Four Seasons Containers)','EFC(Eagle Ford Containers)',
+  'GPCN(Great Plains Northstar-SD)','AgTank Solutions-Pumps',
+  'Basco','Container Connectionz','Tri-Sure','EMP(Enterprise Marking Product)',
+  'Presley Enterprises','ENGY Container Products','ECO Green'
+];
+
+let msalInstance   = null;
+let importAllOrders = [];
+let importFiltered  = [];
+let importSelectedIdx = null;
+let pollTimer      = null;
+let lastModified   = null;
+
+// ── MSAL ──────────────────────────────────────────────────────────────────
+async function initMsal() {
+  console.log("initMsal called, msal defined:", typeof msal !== "undefined");
+  if (typeof msal === "undefined") { setTimeout(initMsal, 300); return; }
+  try {
+    msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
+    await msalInstance.initialize();
+    console.log("MSAL initialized OK");
+    try { await msalInstance.handleRedirectPromise(); } catch(e) { console.warn("redirect:", e); }
+  } catch(e) {
+    console.error("MSAL init error:", e);
+  }
+}
+
+async function getToken() {
+  if (!msalInstance) return null;
+  const accounts = msalInstance.getAllAccounts();
+  if (!accounts.length) return null;
+  try {
+    const r = await msalInstance.acquireTokenSilent({ scopes: GRAPH_SCOPES, account: accounts[0] });
+    return r.accessToken;
+  } catch(e) { return null; }
+}
+
+async function signIn() {
+  // Wait for MSAL to fully initialize if needed
+  if (!msalInstance) {
+    await initMsal();
+    await new Promise(r => setTimeout(r, 500));
+  }
+  // Extra safety — wait until msalInstance is truly ready
+  let attempts = 0;
+  while (!msalInstance && attempts < 20) {
+    await new Promise(r => setTimeout(r, 200));
+    attempts++;
+  }
+  if (!msalInstance) {
+    console.error("MSAL failed to initialize");
+    return;
+  }
+  try {
+    await msalInstance.loginPopup({ scopes: GRAPH_SCOPES });
+    loadOrdersFromSharePoint();
+  } catch(e) {
+    console.error("Login failed:", e);
+    setImportStatus("error", 0, 0, "", e.message);
+  }
+}
+
+// ── GRAPH ─────────────────────────────────────────────────────────────────
+async function graphGet(path, binary) {
+  const token = await getToken();
+  if (!token) throw new Error("not_signed_in");
+  const r = await fetch("https://graph.microsoft.com/v1.0" + path, {
+    headers: { Authorization: "Bearer " + token }
+  });
+  if (!r.ok) throw new Error("Graph " + r.status);
+  return binary ? r.arrayBuffer() : r.json();
+}
+
+// ── LOAD ORDERS ───────────────────────────────────────────────────────────
+async function loadOrdersFromSharePoint() {
+  setImportStatus("loading");
+  try {
+    const meta   = await graphGet("/drives/" + DRIVE_ID + "/root:/" + FILE_NAME);
+    const buffer = await graphGet("/drives/" + DRIVE_ID + "/items/" + meta.id + "/content", true);
+    const wb     = XLSX.read(buffer, { type: "array", cellDates: true, dateNF: "yyyy-mm-dd" });
+    const SKIP   = new Set(["COMPLETE","CANCELED","Order Status",""]);
+    const orders = [], sheetsFound = [];
+
+    for (const sheetName of VENDOR_SHEETS) {
+      if (!wb.SheetNames.includes(sheetName)) continue;
+      const ws   = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:"", raw:false, dateNF:"yyyy-mm-dd" });
+      let hdrIdx = -1, hdr = [];
+      for (let i = 0; i < Math.min(rows.length, 6); i++) {
+        if (rows[i] && rows[i].includes("MPH PO")) { hdrIdx = i; hdr = rows[i]; break; }
+      }
+      if (hdrIdx < 0) continue;
+      sheetsFound.push(sheetName);
+      const col = n => hdr.indexOf(n);
+      const C = {
+        status:col("Order Status"), order_date:col("Order Date"), csr:col("Sales Person/CSR"),
+        mph_po:col("MPH PO"), cust_po:col("Customer PO"), desc:col("Description"), qty:col("Qty"),
+        ship_date:col("Ship Date"), wanted_date:col("Wanted Date"), appt:col("Appt. Time"),
+        pn:col("P/N"), vendor:col("Vendor"), buy:col("Buy"), sell:col("Sell"),
+        customer:col("Customer"), freight:col("Freight"), ship_to:col("Ship To"),
+        contacts:col("Customer Order Confirmation Contacts"), po_notes:col("PO Notes"),
+        freight_notes:col("Freight/Invoice Notes"), bill_to:col("Bill To"), misc:col("Misc"),
+      };
+      for (let r = hdrIdx+1; r < rows.length; r++) {
+        const row = rows[r]; if (!row) continue;
+        const g = k => String(row[C[k]] ?? "").trim();
+        const status = g("status");
+        if (SKIP.has(status)) continue;
+        const mph_po = g("mph_po");
+        // Allow PO Request orders even without an MPH PO number
+        if ((!mph_po || mph_po === "0") && status !== "PO REQUEST TO ACCOUNTING") continue;
+        const o = {}; for (const k of Object.keys(C)) o[k] = g(k);
+        o.sheet = sheetName; orders.push(o);
+      }
+    }
+
+    lastModified    = meta.lastModifiedDateTime;
+    importAllOrders = orders;
+
+    // Populate vendor filter
+    const vf = document.getElementById("filterVendorSheet");
+    vf.innerHTML = '<option value="">All Vendors</option>' +
+      sheetsFound.map(s => '<option value="' + s + '">' + s.replace(/[()]/g,"") + "</option>").join("");
+    vf.disabled = false;
+    document.getElementById("importSearch").disabled = false;
+    document.getElementById("filterStatus").disabled = false;
+
+    setImportStatus("live", orders.length, sheetsFound.length, meta.lastModifiedDateTime);
+    filterImportTable();
+
+    // Poll for changes
+    if (!pollTimer) pollTimer = setInterval(pollChanges, POLL_INTERVAL);
+
+  } catch(e) {
+    if (e.message === "not_signed_in") setImportStatus("signin");
+    else setImportStatus("error", 0, 0, "", e.message);
+    console.error(e);
+  }
+}
+
+async function pollChanges() {
+  try {
+    const token = await getToken();
+    if (!token) return;
+    const meta = await graphGet("/drives/" + DRIVE_ID + "/root:/" + FILE_NAME);
+    if (meta.lastModifiedDateTime !== lastModified) loadOrdersFromSharePoint();
+  } catch(e) {}
+}
+
+// ── STATUS UI ─────────────────────────────────────────────────────────────
+function setImportStatus(state, count, sheets, modified, err) {
+  const icon  = document.getElementById("uploadIcon");
+  const label = document.getElementById("uploadLabel");
+  const sub   = document.getElementById("uploadSub");
+  const dot   = document.getElementById("liveIndicator");
+  const zone  = document.getElementById("uploadZone");
+  const sub2  = document.getElementById("importSubtitle");
+
+  if (state === "live") {
+    zone.onclick = null; zone.style.cursor = "default";
+    zone.classList.add("loaded"); dot.style.display = "block";
+    icon.textContent = "📊";
+    label.textContent = "✓ Live — " + count + " orders across " + sheets + " sheets";
+    sub.textContent = "SharePoint: MPH Orders.xlsm";
+    let ago = "";
+    if (modified) {
+      const s = Math.round((Date.now() - new Date(modified).getTime()) / 1000);
+      ago = s < 60 ? s + "s ago" : s < 3600 ? Math.round(s/60) + "m ago" : Math.round(s/3600) + "h ago";
+    }
+    sub2.textContent = count + " live orders • refreshes every " + (POLL_INTERVAL/1000) + "s" + (ago ? " • saved " + ago : "");
+  } else if (state === "loading") {
+    dot.style.display = "none"; zone.classList.remove("loaded");
+    icon.textContent = "⏳"; label.textContent = "Loading orders from SharePoint…";
+    sub.textContent = "Downloading MPH Orders1270A.xlsm"; sub2.textContent = "Please wait…";
+  } else if (state === "signin") {
+    dot.style.display = "none"; zone.classList.remove("loaded");
+    zone.style.cursor = "pointer"; zone.onclick = signIn;
+    icon.textContent = "🔐"; label.textContent = "Sign in with Microsoft";
+    sub.textContent = "Click here — use your MPH United account";
+    sub2.textContent = "One-time sign in per session";
+    document.getElementById("importTableWrap").innerHTML = 
+      "<div class=\"import-empty\"><div class=\"ie-icon\">🔐</div><h3>Sign In to Load Orders</h3><p>Click the bar above and sign in with your MPH United Microsoft account.</p></div>";
+  } else {
+    dot.style.display = "none"; zone.classList.remove("loaded");
+    zone.style.cursor = "pointer"; zone.onclick = signIn;
+    icon.textContent = "⚠️"; label.textContent = "Error — click to retry";
+    sub.textContent = err || "Unknown error"; sub2.textContent = "";
+  }
+}
+
+// ── IMPORT PANEL ──────────────────────────────────────────────────────────
+function openImport() {
+  document.getElementById("importPanel").classList.add("open");
+  if (!msalInstance) {
+    initMsal().then(() => {
+      getToken().then(t => { if (t) loadOrdersFromSharePoint(); else setImportStatus("signin"); });
+    });
+  } else {
+    getToken().then(t => { if (t) loadOrdersFromSharePoint(); else setImportStatus("signin"); });
+  }
+}
+
+function closeImport() {
+  document.getElementById("importPanel").classList.remove("open");
+}
+
+// ── TABLE ─────────────────────────────────────────────────────────────────
+function filterImportTable() {
+  const q = document.getElementById("importSearch").value.toLowerCase();
+  const sf = document.getElementById("filterStatus").value;
+  const vf = document.getElementById("filterVendorSheet").value;
+  importFiltered = importAllOrders.filter(o => {
+    if (sf && o.status !== sf) return false;
+    if (vf && o.sheet !== vf) return false;
+    if (q && !([o.customer,o.vendor,o.mph_po,o.cust_po,o.desc,o.freight,o.csr].join(" ").toLowerCase().includes(q))) return false;
+    return true;
+  });
+  importSelectedIdx = null;
+  document.getElementById("btnLoadOrder").disabled = true;
+  renderImportTable();
+}
+
+function statusPillClass(s) {
+  if (s.includes("CONFIRMED TO CUSTOMER")) return "confirmed";
+  if (s.includes("SENT ORDER")) return "sent";
+  if (s.includes("WAITING")) return "waiting";
+  if (s.includes("READY")) return "ready";
+  return "other";
+}
+
+function fmtDate(d) {
+  if (!d) return "—";
+  const p = d.split("-");
+  return p.length === 3 ? p[1]+"/"+p[2]+"/"+p[0].slice(2) : d;
+}
+
+function renderImportTable() {
+  const wrap = document.getElementById("importTableWrap");
+  document.getElementById("importCount").textContent = importFiltered.length + " orders";
+  if (!importFiltered.length && importAllOrders.length) {
+    wrap.innerHTML = '<div class="import-empty"><div class="ie-icon">🔍</div><h3>No Orders Match</h3><p>Adjust filters.</p></div>';
+    return;
+  }
+  if (!importAllOrders.length) return;
+  const rows = importFiltered.map((o,i) => {
+    const b = parseFloat((o.buy||"").replace(/[^0-9.]/g,""))||0;
+    const s = parseFloat((o.sell||"").replace(/[^0-9.]/g,""))||0;
+    const margin = (b&&s&&s>b) ? ' <span style="color:var(--green);font-size:10px">(+' + (s-b) + ")</span>" : "";
+    const st = (o.status||"").replace("WAITING ON VENDOR TO CONFIRM","WAIT VENDOR")
+      .replace("WAITING TO CONFIRM TO CUSTOMER","WAIT CUST.").replace("CONFIRMED TO CUSTOMER","CONFIRMED")
+      .replace("SENT ORDER TO CARRIER","SENT").replace("READY TO SHIP","READY").replace("PO REQUEST TO ACCOUNTING","PO REQ");
+    const d = o.desc||"—";
+    return "<tr onclick=\"selectImportRow("+i+")\" id=\"irow-"+i+"\">" +
+      "<td class=\"td-status\"><span class=\"status-pill "+statusPillClass(o.status)+"\">"+st+"</span></td>" +
+      "<td class=\"td-cust\">"+(o.customer||"—")+"</td>" +
+      "<td style=\"white-space:nowrap;color:var(--gold);font-weight:600\">"+(o.mph_po||"—")+"</td>" +
+      "<td style=\"white-space:nowrap\">"+(o.cust_po||"—")+"</td>" +
+      "<td class=\"td-desc\">"+(d.length>90?d.slice(0,90)+"…":d)+"</td>" +
+      "<td style=\"text-align:right;white-space:nowrap\">"+(o.qty||"—")+"</td>" +
+      "<td style=\"text-align:right;white-space:nowrap\">"+(o.buy||"—")+margin+"</td>" +
+      "<td style=\"text-align:right;white-space:nowrap\">"+(o.sell||"—")+"</td>" +
+      "<td style=\"white-space:nowrap\">"+fmtDate(o.ship_date)+"</td>" +
+      "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.vendor||o.sheet||"").split(" - ")[0]+"</td>" +
+      "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.freight||"—")+"</td>" +
+      "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.csr||"—")+"</td></tr>";
+  }).join("");
+  wrap.innerHTML = "<table class=\"import-table\"><thead><tr>" +
+    "<th>Status</th><th>Customer</th><th>MPH PO</th><th>Cust PO</th><th>Description</th>" +
+    "<th>Qty</th><th>Buy</th><th>Sell</th><th>Ship Date</th><th>Vendor</th><th>Freight</th><th>CSR</th>" +
+    "</tr></thead><tbody>"+rows+"</tbody></table>";
+}
+
+function selectImportRow(i) {
+  if (importSelectedIdx !== null) {
+    const p = document.getElementById("irow-"+importSelectedIdx);
+    if (p) p.classList.remove("selected");
+  }
+  importSelectedIdx = i;
+  const el = document.getElementById("irow-"+i);
+  if (el) el.classList.add("selected");
+  const o = importFiltered[i];
+  document.getElementById("btnLoadOrder").disabled = false;
+  const d = o.desc||"";
+  document.getElementById("importFooterHint").textContent =
+    "Selected: MPH PO " + o.mph_po + " — " + o.customer + " — " + d.slice(0,60) + (d.length>60?"…":"");
+}
+
+function loadSelectedOrder() {
+  if (importSelectedIdx === null) return;
+  const o = importFiltered[importSelectedIdx];
+  document.getElementById("customerSearch").value = o.customer||"";
+  document.getElementById("selectedCustomerName").value = o.customer||"";
+  const cm = CUSTOMERS.find(c => c.name.toLowerCase() === (o.customer||"").toLowerCase());
+  if (cm) { selectCustomer(cm.name); }
+  else {
+    if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
+    if (o.contacts) document.getElementById("customerEmail").value = (o.contacts||"").split("\n")[0].trim();
+    document.getElementById("customerCard").classList.remove("active");
+  }
+  if (o.cust_po) document.getElementById("customerPO").value = o.cust_po;
+  if (o.ship_date) document.getElementById("shipDate").value = o.ship_date.split("T")[0];
+  if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
+  const notes = [o.po_notes, o.freight_notes].filter(Boolean).join("\n\n");
+  if (notes) document.getElementById("specialInstructions").value = notes;
+  const vk = matchVendorKey(o.vendor, o.sheet);
+  if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
+  if (o.freight) {
+    const el = document.getElementById("shipVia");
+    const m = Array.from(el.options).find(op => op.value.toLowerCase().includes(o.freight.toLowerCase()) || o.freight.toLowerCase().includes(op.value.toLowerCase()));
+    if (m) el.value = m.value;
+    else { const n=document.createElement("option"); n.value=o.freight; n.textContent=o.freight; el.appendChild(n); el.value=o.freight; }
+  }
+  const body = document.getElementById("lineBody");
+  body.innerHTML = "";
+  const ck = isCore(vk);
+  const pp = s => { const m=(s||"").match(/[\d.]+/); return m?m[0]:""; };
+  const tr = document.createElement("tr");
+  tr.innerHTML = makeRowHTML(o.desc||"", o.pn||"", pp(o.buy), ck);
+  body.appendChild(tr);
+  const qty = tr.querySelector(".li-qty");
+  if (qty && o.qty) qty.value = o.qty;
+  closeImport();
+  const btn = document.getElementById("generateBtn");
+  btn.style.background = "var(--green)";
+  btn.textContent = "✓ Order Loaded — Review & Generate PO";
+  setTimeout(() => { btn.style.background=""; btn.textContent="⚡ Generate PO + All Emails"; }, 3000);
+}
+
+function matchVendorKey(v, sheet) {
+  if (!v) return "";
+  v = v.toLowerCase();
+  if (v.includes("waterloo")) return "core_waterloo";
+  if (v.includes("nashua")) return "core_nashua";
+  if (v.includes("shreveport")) return "core_shreveport";
+  if (v.includes("south holland")) return "core_southholland";
+  if (v.includes("houston") && v.includes("core")) return "core_houston";
+  if (v.includes("calhoun")) return "core_calhoun";
+  if (v.includes("alliance") && v.includes("greenwood")) return "alliance_greenwood";
+  if (v.includes("alliance") && v.includes("hillsboro")) return "alliance_hillsboro";
+  if (v.includes("5 star") || v.includes("five star")) return "fivestar_bristow";
+  if (v.includes("southeast") || v.includes("sec ")) return "sec_cleveland";
+  if (v.includes("great plains") && v.includes("garden city")) return "gpc_gardencity";
+  if (v.includes("superior tote") && v.includes("greenwood")) return "sts_greenwood";
+  if (v.includes("superior tote") && v.includes("summitville")) return "sts_summitville";
+  if (v.includes("united container")) return "ucg_hillsboro";
+  if (v.includes("texas tote") || v.includes("ttw")) return "ttw_odessa";
+  if (v.includes("ted levine") || v.includes("tld")) return "tld_socal";
+  if (v.includes("rural recycling") || v.includes("rrg")) return "rrg_stanwood";
+  if (v.includes("clean environmental")) return "clean_stlouis";
+  if (v.includes("centurion") && v.includes("lewisburg")) return "centurion_lewisburg";
+  if (v.includes("centurion") && v.includes("memphis")) return "centurion_memphis";
+  if (v.includes("coastal")) return "coastal_alvin";
+  return "";
+}
+
+// Init MSAL on page load
+setTimeout(initMsal, 300);
+
+</script>
+</body>
+</html>
