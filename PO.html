@@ -277,7 +277,10 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
       <div class="import-title">📂 Import from MPH Orders</div>
       <div class="import-subtitle" id="importSubtitle">Upload MPH_Orders.xlsm to load live orders</div>
     </div>
-    <button class="btn-close-import" onclick="closeImport()">✕ Close</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn-close-import" onclick="loadOrdersFromSharePoint()" style="background:rgba(45,106,79,0.15);color:var(--green);border-color:rgba(45,106,79,0.4);">↻ Refresh</button>
+      <button class="btn-close-import" onclick="closeImport()">✕ Close</button>
+    </div>
   </div>
   <div class="import-body">
     <div class="import-controls">
@@ -1362,9 +1365,8 @@ function loadAsSplitLoad() {
     document.getElementById("customerCard").classList.remove("active");
   }
 
-  // Combined PO numbers, ship date from first
-  const combinedPO = [o1.cust_po, o2.cust_po].filter(Boolean).join(" / ");
-  if (combinedPO) document.getElementById("customerPO").value = combinedPO;
+  // Customer PO — same for both orders on a split load, use first
+  if (o1.cust_po) document.getElementById("customerPO").value = o1.cust_po;
   if (o1.ship_date) document.getElementById("shipDate").value = o1.ship_date.split("T")[0];
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
