@@ -289,13 +289,13 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
         </div>
         <div id="liveIndicator" style="display:none;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);margin-left:auto;flex-shrink:0;"></div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div style="display:flex;gap:8px;align-items:center;width:100%;">
         <button onclick="loadOrdersFromSharePoint()" style="flex-shrink:0;background:rgba(45,106,79,0.15);color:var(--green);border:1px solid rgba(45,106,79,0.4);border-radius:8px;padding:8px 14px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;transition:all 0.2s;white-space:nowrap;" onmouseover="this.style.background='rgba(45,106,79,0.3)'" onmouseout="this.style.background='rgba(45,106,79,0.15)'">↻ Refresh</button>
-        <select class="import-filter" id="filterVendorSheet" onchange="filterImportTable()" disabled style="flex-shrink:0;">
+        <select class="import-filter" id="filterVendorSheet" onchange="filterImportTable()" disabled style="flex-shrink:0;min-width:220px;">
           <option value="">All Vendors</option>
         </select>
         <input type="text" class="import-search" id="importSearch" placeholder="Search customer, vendor, PO#, description..." oninput="filterImportTable()" disabled style="flex:1;min-width:0;">
-        <span class="import-count" id="importCount">—</span>
+        <span id="importCount" style="display:none;">—</span>
       </div>
     </div>
     <div class="import-table-wrap" id="importTableWrap">
