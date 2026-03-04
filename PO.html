@@ -1096,7 +1096,6 @@ async function loadOrdersFromSharePoint() {
       sheetsFound.map(s => '<option value="' + s + '">' + s.replace(/[()]/g,"") + "</option>").join("");
     vf.disabled = false;
     document.getElementById("importSearch").disabled = false;
-    document.getElementById("filterStatus").disabled = false;
 
     setImportStatus("live", orders.length, sheetsFound.length, meta.lastModifiedDateTime);
     filterImportTable();
