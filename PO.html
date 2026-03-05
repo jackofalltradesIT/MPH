@@ -354,7 +354,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
         <textarea id="shipTo" placeholder="Will auto-fill from customer record"></textarea>
       </div>
       
-      <div class="field">
+      <div class="field" style="display:none;">
         <label>Customer Email (for confirmation)</label>
         <input type="email" id="customerEmail" placeholder="Will auto-fill from customer record">
       </div>
@@ -442,10 +442,6 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
     <!-- LINE ITEMS -->
     <div class="form-section">
       <div class="sec-title">Products & Pricing</div>
-      <div id="chipsWrap" class="chips-wrap" style="display:none;">
-        <div class="chips-label">Tap to add vendor products ↓</div>
-        <div class="product-chips" id="productChips"></div>
-      </div>
       <table class="products-table" id="lineTable">
         <thead><tr><th>Product / Description</th><th class="pn-col-head" id="pnHead">P/N</th><th>Qty</th><th>Buy $</th><th></th></tr></thead>
         <tbody id="lineBody">
@@ -750,68 +746,51 @@ async function generatePO() {
   setLoading(true, 'Building PO & emails...', 'Please wait');
     document.getElementById('generateBtn').disabled = true;
     setTimeout(() => {
-      const productList = lines.map(l => ` - ${l.desc}${l.pn ? ' [P/N: '+l.pn+']' : ''}${l.qty ? ' x' + l.qty : ''}${l.price ? ' @ ' + fmtCur(l.price) : ''}`).join('\n');
-      const totalStr = total > 0 ? fmtCur(total) : 'TBD';
+      const descList = lines.map(l => l.desc + (l.pn ? ` [P/N: ${l.pn}]` : '')).join('\n');
+      const qtyPriceList = lines.map(l => `Qty: ${l.qty||'--'}   Buy Price: ${fmtCur(l.price)}`).join('\n');
       generatedEmails = [{
         to: `${vendor.contact} <${vendor.email || vendor.phone}>`,
         subject: `MPH United PO ${mphPONum} -- ${customerName} | Ship ${order.shipDate}`,
-        body: `Dear ${vendor.contact},
+        body: `Hello
 
 Please find below Purchase Order ${mphPONum} from MPH United.
 
-ORDER DETAILS
-------------------
+PRODUCTS ORDERED:
+${descList}
+
+Ship Date: ${order.shipDate}
+Ship Via: ${order.shipVia}
 MPH PO #: ${mphPONum}
 Customer PO #: ${order.customerPO}
-Order Date: ${order.orderDate}
-Required Ship: ${order.shipDate}
-Ship Via: ${order.shipVia}
-Payment Terms: ${order.paymentTerms}
+${qtyPriceList}
 
 SHIP TO: ${order.customerName}
 ${order.shipTo}
-
-PRODUCTS ORDERED:
-${productList}
-
-ORDER TOTAL: ${totalStr}
-${order.specialInstructions ? '\nSPECIAL INSTRUCTIONS:\n' + order.specialInstructions : ''}
-
-DOCK HOURS / NOTES: ${vendor.dockHours}
+${order.specialInstructions ? '\nPO NOTES:\n' + order.specialInstructions : ''}
+DOCK HOURS: ${vendor.dockHours}
 ${vendor.notes}
 
-Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # ${mphPONum} on all correspondence and shipping documents.
-
-Thank you,
-MPH United Operations`
+Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # ${mphPONum} on all correspondence and shipping documents.`
       }, {
-        to: `${customerName} <${order.customerEmail || 'customer@email.com'}>`,
+        to: `${customerName} <${order.customerEmail || ''}>`,
         subject: `Order Confirmation -- MPH United PO ${mphPONum} | Customer PO ${order.customerPO}`,
-        body: `Dear ${customerName} Team,
+        body: `Hello
 
-Thank you for your order. Please find your order confirmation below.
+Thank you for this order. We have confirmed your shipping details as follows:
 
-ORDER CONFIRMATION
-------------------
+${descList}
+
+${qtyPriceList}
+
 MPH PO #: ${mphPONum}
-Your PO #: ${order.customerPO}
-Order Date: ${order.orderDate}
-Expected Ship: ${order.shipDate}
+Customer PO: ${order.customerPO}
+Ship Date: ${order.shipDate}
 Ship Via: ${order.shipVia}
 Payment Terms: ${order.paymentTerms}
 
 SHIP TO: ${order.shipTo}
 
-ITEMS ORDERED:
-${productList}
-
-ORDER TOTAL: ${totalStr}
-${order.specialInstructions ? '\nNOTES: ' + order.specialInstructions : ''}
-
-We have placed this order with our vendor and will follow up with tracking information once your shipment is confirmed. Please do not hesitate to reach out with any questions.
-
-Thank you for your business,
-MPH United`
+Please do not hesitate to reach out with any questions.`
       }];
       setLoading(false);
     renderPO(order);
@@ -1321,7 +1300,7 @@ function loadSelectedOrder() {
   if (o.cust_po) document.getElementById("customerPO").value = o.cust_po;
   if (o.ship_date) document.getElementById("shipDate").value = o.ship_date.split("T")[0];
   if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
-  const notes = [o.po_notes, o.freight_notes].filter(Boolean).join("\n\n");
+  const notes = o.po_notes || "";
   if (notes) document.getElementById("specialInstructions").value = notes;
   const vk = matchVendorKey(o.vendor, o.sheet);
   if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
@@ -1370,7 +1349,7 @@ function loadAsSplitLoad() {
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
   // Notes flagged as SPLIT LOAD
-  const notes = ["SPLIT LOAD", o1.po_notes, o2.po_notes, o1.freight_notes, o2.freight_notes].filter(Boolean).join("\n\n");
+  const notes = ["SPLIT LOAD", o1.po_notes, o2.po_notes].filter(Boolean).join("\n\n");
   document.getElementById("specialInstructions").value = notes;
 
   // Vendor from first order
