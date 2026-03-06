@@ -321,7 +321,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
   <div class="sidebar">
 
     <button onclick="openImport()" style="width:100%;background:#1a3a6e;color:#ffffff;border:none;border-radius:8px;padding:11px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-bottom:14px;transition:all 0.2s;" onmouseover="this.style.background='#254d91'" onmouseout="this.style.background='#1a3a6e'">IMPORT PO REQUESTS FROM EXCEL</button>
-    <div class="divider">Review order details below and click Generate PO at the bottom</div>
+    <div class="divider">Fill in the order details below</div>
 
     <!-- CUSTOMER -->
     <div class="form-section">
@@ -620,6 +620,7 @@ function setPNVisible(show) {
 function buildChips(products, vendorKey) {
   const wrap = document.getElementById('chipsWrap');
   const chips = document.getElementById('productChips');
+  if (!wrap || !chips) return;
   if (!products || products.length === 0) { wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
   chips.innerHTML = products.map((p, i) =>
@@ -647,7 +648,7 @@ function loadVendor() {
   const key = document.getElementById('vendorSelect').value;
   if (!key || !VENDORS[key]) {
     document.getElementById('vendorCard').classList.remove('active');
-    document.getElementById('chipsWrap').style.display = 'none';
+    const cw = document.getElementById('chipsWrap'); if (cw) cw.style.display = 'none';
     setPNVisible(false);
     return;
   }
