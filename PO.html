@@ -436,6 +436,10 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
           </select>
         </div>
       </div>
+      <div class="field">
+        <label>Appt. Time</label>
+        <input type="text" id="apptTime" placeholder="e.g. 8:00am">
+      </div>
 
     </div>
 
@@ -641,7 +645,7 @@ function addChipProduct(desc, pn, price, chipEl) {
 
 function makeRowHTML(desc, pn, price, showPN) {
   const pnCell = `<td class="pn-col${showPN?' visible':''}"><input type="text" class="li-pn" value="${pn||''}" placeholder="Part #" style="width:100%;background:transparent;border:1px solid transparent;border-radius:4px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ink);padding:3px 5px;outline:none;transition:all 0.15s;" onfocus="this.style.borderColor='var(--gold)';this.style.background='white'" onblur="this.style.borderColor='transparent';this.style.background='transparent'"></td>`;
-  return `<td><input type="text" class="li-desc" value="${desc||''}" placeholder="Product description"></td>${pnCell}<td><input type="number" class="li-qty" placeholder="0" min="0"></td><td><input type="number" class="li-price" value="${price||''}" placeholder="0.00" step="0.01" min="0"></td><td><button class="btn-remove" onclick="removeRow(this)">×</button></td>`;
+  return `<td><input type="text" class="li-desc" value="${desc||''}" placeholder="Product description"></td>${pnCell}<td><input type="number" class="li-qty" placeholder="0" min="0"></td><td><input type="number" class="li-price" value="${price||''}" placeholder="0.00" step="0.01" min="0"></td><td><input type="number" class="li-sell" value="" style="display:none" step="0.01" min="0"></td><td><button class="btn-remove" onclick="removeRow(this)">×</button></td>`;
 }
 
 function loadVendor() {
@@ -692,7 +696,8 @@ function getLines() {
     desc: r.querySelector('.li-desc').value || 'IBC Product',
     pn: r.querySelector('.li-pn') ? r.querySelector('.li-pn').value.trim() : '',
     qty: parseFloat(r.querySelector('.li-qty').value) || 0,
-    price: parseFloat(r.querySelector('.li-price').value) || 0
+    price: parseFloat(r.querySelector('.li-price').value) || 0,
+    sell: parseFloat(r.querySelector('.li-sell') ? r.querySelector('.li-sell').value : 0) || 0
   })).filter(r => r.desc);
 }
 
@@ -754,6 +759,7 @@ async function generatePO() {
     customerEmail: document.getElementById('customerEmail').value.trim(),
     shipDate: fmtDate(document.getElementById('shipDate').value),
     shipVia: document.getElementById('shipVia').value,
+    apptTime: document.getElementById('apptTime').value.trim(),
     partNumber: document.getElementById('partNumber').value.trim(),
     salesOrder: document.getElementById('salesOrder').value.trim(),
     salesPerson: '',
@@ -769,6 +775,7 @@ async function generatePO() {
     setTimeout(() => {
       const descList = lines.map(l => l.desc + (l.pn ? ` [P/N: ${l.pn}]` : '')).join('\n');
       const qtyPriceList = lines.map(l => `Qty: ${l.qty||'--'}   Buy Price: ${fmtCur(l.price)}`).join('\n');
+      const qtyPriceListSell = lines.map(l => `Qty: ${l.qty||'--'}   Price: ${l.sell > 0 ? fmtCur(l.sell) : fmtCur(l.price)}`).join('\n');
       generatedEmails = [{
         to: `${vendor.contact} <${vendor.email || vendor.phone}>`,
         subject: `MPH United PO ${mphPONum} -- ${customerName} | Ship ${order.shipDate}`,
@@ -801,7 +808,7 @@ Thank you for this order. We have confirmed your shipping details as follows:
 
 ${descList}
 
-${qtyPriceList}
+${qtyPriceListSell}
 
 MPH PO #: ${mphPONum}
 Customer PO: ${order.customerPO}
@@ -842,6 +849,7 @@ function renderPO(o) {
       <div class="po-meta-box"><div class="po-meta-label">Customer PO #</div><div class="po-meta-value">${o.customerPO}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Required Ship Date</div><div class="po-meta-value">${o.shipDate}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Ship Via</div><div class="po-meta-value">${o.shipVia}</div></div>
+      <div class="po-meta-box"><div class="po-meta-label">Appt. Time</div><div class="po-meta-value">${o.apptTime||'--'}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Sales Order #</div><div class="po-meta-value">${o.salesOrder||'--'}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Dock Hours</div><div class="po-meta-value" style="font-size:10px">${o.vendor.dockHours}</div></div>
     </div>
@@ -1322,6 +1330,7 @@ function loadSelectedOrder() {
   if (o.cust_po) document.getElementById("customerPO").value = o.cust_po;
   if (o.pn) document.getElementById("partNumber").value = o.pn;
   if (o.alliance_so) document.getElementById("salesOrder").value = o.alliance_so;
+  if (o.appt) document.getElementById("apptTime").value = o.appt;
   if (o.ship_date) document.getElementById("shipDate").value = o.ship_date.split("T")[0];
   if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
   const notes = o.po_notes || "";
@@ -1343,6 +1352,8 @@ function loadSelectedOrder() {
   body.appendChild(tr);
   const qty = tr.querySelector(".li-qty");
   if (qty && o.qty) qty.value = o.qty;
+  const sellEl = tr.querySelector(".li-sell");
+  if (sellEl && o.sell) sellEl.value = pp(o.sell);
   closeImport();
   const btn = document.getElementById("generateBtn");
   btn.style.background = "var(--green)";
@@ -1371,6 +1382,7 @@ function loadAsSplitLoad() {
   if (o1.cust_po) document.getElementById("customerPO").value = o1.cust_po;
   if (o1.pn) document.getElementById("partNumber").value = o1.pn;
   if (o1.alliance_so) document.getElementById("salesOrder").value = o1.alliance_so;
+  if (o1.appt) document.getElementById("apptTime").value = o1.appt;
   if (o1.ship_date) document.getElementById("shipDate").value = o1.ship_date.split("T")[0];
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
@@ -1400,12 +1412,16 @@ function loadAsSplitLoad() {
   body.appendChild(tr1);
   const qty1 = tr1.querySelector(".li-qty");
   if (qty1 && o1.qty) qty1.value = o1.qty;
+  const sell1 = tr1.querySelector(".li-sell");
+  if (sell1 && o1.sell) sell1.value = pp(o1.sell);
 
   const tr2 = document.createElement("tr");
   tr2.innerHTML = makeRowHTML("SPLIT LOAD 2 — " + (o2.desc||""), o2.pn||"", pp(o2.buy), ck);
   body.appendChild(tr2);
   const qty2 = tr2.querySelector(".li-qty");
   if (qty2 && o2.qty) qty2.value = o2.qty;
+  const sell2 = tr2.querySelector(".li-sell");
+  if (sell2 && o2.sell) sell2.value = pp(o2.sell);
 
   closeImport();
   const btn = document.getElementById("generateBtn");
