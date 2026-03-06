@@ -349,6 +349,16 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
           <input type="date" id="orderDate">
         </div>
       </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Part Number</label>
+          <input type="text" id="partNumber" placeholder="P/N">
+        </div>
+        <div class="field">
+          <label>Sales Order #</label>
+          <input type="text" id="salesOrder" placeholder="Alliance SO #">
+        </div>
+      </div>
       <div class="field">
         <label>Ship-To Address</label>
         <textarea id="shipTo" placeholder="Will auto-fill from customer record"></textarea>
@@ -425,16 +435,6 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
             <option value="Other">Other</option>
           </select>
         </div>
-      </div>
-      <div class="field">
-        <label>Payment Terms</label>
-        <select id="paymentTerms">
-          <option value="Net 30">Net 30</option>
-          <option value="Net 15">Net 15</option>
-          <option value="Net 45">Net 45</option>
-          <option value="Due on Receipt">Due on Receipt</option>
-          <option value="COD">COD</option>
-        </select>
       </div>
 
     </div>
@@ -754,7 +754,8 @@ async function generatePO() {
     customerEmail: document.getElementById('customerEmail').value.trim(),
     shipDate: fmtDate(document.getElementById('shipDate').value),
     shipVia: document.getElementById('shipVia').value,
-    paymentTerms: document.getElementById('paymentTerms').value,
+    partNumber: document.getElementById('partNumber').value.trim(),
+    salesOrder: document.getElementById('salesOrder').value.trim(),
     salesPerson: '',
     specialInstructions: document.getElementById('specialInstructions').value.trim(),
     vendor, lines, total
@@ -806,7 +807,7 @@ MPH PO #: ${mphPONum}
 Customer PO: ${order.customerPO}
 Ship Date: ${order.shipDate}
 Ship Via: ${order.shipVia}
-Payment Terms: ${order.paymentTerms}
+Payment Terms: Net 30
 
 SHIP TO: ${order.shipTo}
 
@@ -841,7 +842,7 @@ function renderPO(o) {
       <div class="po-meta-box"><div class="po-meta-label">Customer PO #</div><div class="po-meta-value">${o.customerPO}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Required Ship Date</div><div class="po-meta-value">${o.shipDate}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Ship Via</div><div class="po-meta-value">${o.shipVia}</div></div>
-      <div class="po-meta-box"><div class="po-meta-label">Payment Terms</div><div class="po-meta-value">${o.paymentTerms}</div></div>
+      <div class="po-meta-box"><div class="po-meta-label">Sales Order #</div><div class="po-meta-value">${o.salesOrder||'--'}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Dock Hours</div><div class="po-meta-value" style="font-size:10px">${o.vendor.dockHours}</div></div>
     </div>
     <table class="po-table">
@@ -1076,6 +1077,7 @@ async function loadOrdersFromSharePoint() {
         customer:col("Customer"), freight:col("Freight"), ship_to:col("Ship To"),
         contacts:col("Customer Order Confirmation Contacts"), po_notes:col("PO Notes"),
         freight_notes:col("Freight/Invoice Notes"), bill_to:col("Bill To"), misc:col("Misc"),
+        alliance_so:col("Alliance SO #"),
       };
       for (let r = hdrIdx+1; r < rows.length; r++) {
         const row = rows[r]; if (!row) continue;
@@ -1318,6 +1320,8 @@ function loadSelectedOrder() {
     document.getElementById("customerCard").classList.remove("active");
   }
   if (o.cust_po) document.getElementById("customerPO").value = o.cust_po;
+  if (o.pn) document.getElementById("partNumber").value = o.pn;
+  if (o.alliance_so) document.getElementById("salesOrder").value = o.alliance_so;
   if (o.ship_date) document.getElementById("shipDate").value = o.ship_date.split("T")[0];
   if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
   const notes = o.po_notes || "";
@@ -1365,6 +1369,8 @@ function loadAsSplitLoad() {
 
   // Customer PO — same for both orders on a split load, use first
   if (o1.cust_po) document.getElementById("customerPO").value = o1.cust_po;
+  if (o1.pn) document.getElementById("partNumber").value = o1.pn;
+  if (o1.alliance_so) document.getElementById("salesOrder").value = o1.alliance_so;
   if (o1.ship_date) document.getElementById("shipDate").value = o1.ship_date.split("T")[0];
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
