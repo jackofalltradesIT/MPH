@@ -699,7 +699,26 @@ function getLines() {
 // -- HELPERS ---------------------------------------------------------------
 function fmtCur(n) { return n > 0 ? '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',') : '--'; }
 function fmtDate(v) { if (!v) return '--'; const d = new Date(v+'T00:00:00'); return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}); }
-function genPONum() { const n = new Date(); return `MPH-${String(n.getFullYear()).slice(2)}${String(n.getMonth()+1).padStart(2,'0')}-${String(Math.floor(Math.random()*9000)+1000)}`; }
+function getSignedInInitials() {
+  try {
+    const accounts = msalInstance ? msalInstance.getAllAccounts() : [];
+    if (accounts.length) {
+      const name = accounts[0].name || '';
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+      if (parts.length === 1 && parts[0]) return parts[0].slice(0,2).toUpperCase();
+    }
+  } catch(e) {}
+  return '';
+}
+function genPONum() {
+  const initials = getSignedInInitials();
+  const prefix = initials ? initials + '-' : '';
+  const current = parseInt(localStorage.getItem('mph_po_counter') || '14999', 10);
+  const next = current + 1;
+  localStorage.setItem('mph_po_counter', String(next));
+  return `${prefix}MPH${next}`;
+}
 function printPO() {
   const orig = document.title;
   document.title = 'MPH PO ' + (mphPONum || 'Document');
