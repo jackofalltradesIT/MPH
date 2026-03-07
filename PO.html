@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MPH United — PO System v3</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #f2ede6; --bg2: #e8e1d8; --ink: #1a1612; --ink2: #4a4540;
@@ -12,7 +12,7 @@
   --green: #2d6a4f; --border: rgba(26,22,18,0.12); --shadow: 0 2px 12px rgba(26,22,18,0.08);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh; }
+body { background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif; min-height: 100vh; }
 
 .topbar { background: var(--ink); color: var(--bg); padding: 0 40px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
 .topbar-brand { display: flex; align-items: center; gap: 12px; }
@@ -47,14 +47,14 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
 
 .field { margin-bottom: 10px; }
 .field label { display: block; font-size: 10px; font-weight: 600; color: var(--ink2); letter-spacing: 0.5px; margin-bottom: 4px; text-transform: uppercase; }
-.field input, .field select, .field textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.field input, .field select, .field textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; color: var(--ink); font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,134,11,0.1); }
 .field textarea { min-height: 52px; resize: vertical; line-height: 1.5; font-size: 12px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 
 /* Customer search */
 .customer-search-wrap { position: relative; }
-.customer-search-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s; }
+.customer-search-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; color: var(--ink); font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s; }
 .customer-search-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,134,11,0.1); }
 .customer-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--border); border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 8px 24px rgba(26,22,18,0.12); display: none; }
 .customer-dropdown.open { display: block; }
@@ -79,7 +79,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
 .products-table td input { background: transparent; border: 1px solid transparent; border-radius: 4px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: var(--ink); padding: 3px 5px; width: 100%; outline: none; transition: all 0.15s; }
 .products-table td input:focus { border-color: var(--gold); background: white; }
 .products-table tr:last-child td { border-bottom: none; }
-.btn-add-row { width: 100%; background: transparent; border: 1px dashed rgba(26,22,18,0.2); border-radius: 6px; padding: 6px; font-size: 11px; color: var(--ink2); cursor: pointer; margin-top: 5px; font-family: 'IBM Plex Sans', sans-serif; transition: all 0.2s; }
+.btn-add-row { width: 100%; background: transparent; border: 1px dashed rgba(26,22,18,0.2); border-radius: 6px; padding: 6px; font-size: 11px; color: var(--ink2); cursor: pointer; margin-top: 5px; font-family: 'Inter', sans-serif; transition: all 0.2s; }
 .btn-add-row:hover { border-color: var(--gold); color: var(--gold); }
 
 /* Product chips */
@@ -123,20 +123,20 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 .output-tabs { display: flex; gap: 2px; margin-bottom: 22px; border-bottom: 2px solid var(--border); }
-.output-tab { padding: 10px 18px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--ink2); font-family: 'IBM Plex Sans', sans-serif; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+.output-tab { padding: 10px 18px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--ink2); font-family: 'Inter', sans-serif; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
 .output-tab.active { color: var(--ink); border-bottom-color: var(--gold); }
 .output-panel { display: none; }
 .output-panel.active { display: block; }
 
 .po-actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-.btn-action { padding: 8px 18px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif; transition: all 0.2s; border: 1px solid var(--border); background: var(--cream); color: var(--ink); }
+.btn-action { padding: 8px 18px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; border: 1px solid var(--border); background: var(--cream); color: var(--ink); }
 .btn-action:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .btn-action.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .btn-action.primary:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
 .btn-action.copied { background: var(--green); color: white; border-color: var(--green); }
 
 /* PO Paper */
-.po-paper { background: white; border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 4px 24px rgba(26,22,18,0.1); max-width: 760px; padding: 44px 52px; font-family: 'IBM Plex Sans', sans-serif; }
+.po-paper { background: white; border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 4px 24px rgba(26,22,18,0.1); max-width: 760px; padding: 44px 52px; font-family: 'Inter', sans-serif; }
 .po-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 26px; padding-bottom: 18px; border-bottom: 2px solid var(--ink); }
 .po-company h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 2px; color: var(--ink); }
 .po-company p { font-size: 11px; color: var(--ink2); line-height: 1.7; margin-top: 3px; }
@@ -322,6 +322,18 @@ body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', s
 
     <button onclick="openImport()" style="width:100%;background:#1a3a6e;color:#ffffff;border:none;border-radius:8px;padding:11px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-bottom:14px;transition:all 0.2s;" onmouseover="this.style.background='#254d91'" onmouseout="this.style.background='#1a3a6e'">IMPORT PO REQUESTS FROM EXCEL</button>
     <div class="divider">Review order details below and click Generate PO at the bottom</div>
+
+    <!-- REVISED PO TOGGLE -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:8px 10px;background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.2);border-radius:7px;">
+      <input type="checkbox" id="isRevised" onchange="document.getElementById('revisedPOField').style.display=this.checked?'block':'none'" style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
+      <label for="isRevised" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gold);cursor:pointer;flex:1;">Revised PO — Use Existing PO Number</label>
+    </div>
+    <div id="revisedPOField" style="display:none;margin-bottom:12px;">
+      <div class="field">
+        <label>Existing PO Number to Revise</label>
+        <input type="text" id="revisedPONum" placeholder="e.g. JS-MPH15001" style="font-family:'IBM Plex Mono',monospace;font-weight:600;letter-spacing:1px;">
+      </div>
+    </div>
 
     <!-- CUSTOMER -->
     <div class="form-section">
@@ -643,9 +655,18 @@ function addChipProduct(desc, pn, price, chipEl) {
   setTimeout(() => chipEl.classList.remove('added'), 700);
 }
 
+function escAttr(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function makeRowHTML(desc, pn, price, showPN) {
-  const pnCell = `<td class="pn-col${showPN?' visible':''}"><input type="text" class="li-pn" value="${pn||''}" placeholder="Part #" style="width:100%;background:transparent;border:1px solid transparent;border-radius:4px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ink);padding:3px 5px;outline:none;transition:all 0.15s;" onfocus="this.style.borderColor='var(--gold)';this.style.background='white'" onblur="this.style.borderColor='transparent';this.style.background='transparent'"></td>`;
-  return `<td><input type="text" class="li-desc" value="${desc||''}" placeholder="Product description"></td>${pnCell}<td><input type="number" class="li-qty" placeholder="0" min="0"></td><td><input type="number" class="li-price" value="${price||''}" placeholder="0.00" step="0.01" min="0"></td><td><input type="number" class="li-sell" value="" style="display:none" step="0.01" min="0"></td><td><button class="btn-remove" onclick="removeRow(this)">×</button></td>`;
+  const safeDesc = escHtml(desc||'');
+  const safePn   = escAttr(pn||'');
+  const pnCell = `<td class="pn-col${showPN?' visible':''}"><input type="text" class="li-pn" value="${safePn}" placeholder="Part #" style="width:100%;background:transparent;border:1px solid transparent;border-radius:4px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ink);padding:3px 5px;outline:none;transition:all 0.15s;" onfocus="this.style.borderColor='var(--gold)';this.style.background='white'" onblur="this.style.borderColor='transparent';this.style.background='transparent'"></td>`;
+  return `<td><textarea class="li-desc" placeholder="Product description" rows="2" style="width:100%;background:transparent;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Inter',sans-serif;color:var(--ink);padding:3px 5px;outline:none;transition:all 0.15s;resize:vertical;min-height:36px;line-height:1.4;" onfocus="this.style.borderColor='var(--gold)';this.style.background='white'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${safeDesc}</textarea></td>${pnCell}<td><input type="number" class="li-qty" placeholder="0" min="0"></td><td><input type="number" class="li-price" value="${escAttr(price||'')}" placeholder="0.00" step="0.01" min="0"></td><td><input type="number" class="li-sell" value="" style="display:none" step="0.01" min="0"></td><td><button class="btn-remove" onclick="removeRow(this)">×</button></td>`;
 }
 
 function loadVendor() {
@@ -749,7 +770,9 @@ async function generatePO() {
   const vendor = VENDORS[vendorKey];
   const lines = getLines();
   const total = lines.reduce((s,l) => s+(l.qty*l.price), 0);
-  mphPONum = genPONum();
+  const isRevised = document.getElementById('isRevised').checked;
+  const revisedNum = document.getElementById('revisedPONum').value.trim();
+  mphPONum = (isRevised && revisedNum) ? revisedNum : genPONum();
 
   const order = {
     customerName,
@@ -764,6 +787,7 @@ async function generatePO() {
     salesOrder: document.getElementById('salesOrder').value.trim(),
     salesPerson: '',
     specialInstructions: document.getElementById('specialInstructions').value.trim(),
+    isRevised: isRevised && !!revisedNum,
     vendor, lines, total
   };
 
@@ -773,12 +797,12 @@ async function generatePO() {
   setLoading(true, 'Building PO & emails...', 'Please wait');
     document.getElementById('generateBtn').disabled = true;
     setTimeout(() => {
-      const descList = lines.map(l => l.desc + (l.pn ? ` [P/N: ${l.pn}]` : '')).join('\n');
+      const descList = lines.map(l => (l.desc||'').replace(/\n/g,' | ') + (l.pn ? ` [P/N: ${l.pn}]` : '')).join('\n');
       const qtyPriceList = lines.map(l => `Qty: ${l.qty||'--'}   Buy Price: ${fmtCur(l.price)}`).join('\n');
       const qtyPriceListSell = lines.map(l => `Qty: ${l.qty||'--'}   Price: ${l.sell > 0 ? fmtCur(l.sell) : fmtCur(l.price)}`).join('\n');
       generatedEmails = [{
         to: `${vendor.contact} <${vendor.email || vendor.phone}>`,
-        subject: `MPH United PO ${mphPONum} -- ${customerName} | Ship ${order.shipDate}`,
+        subject: `${order.isRevised ? '[REVISED] ' : ''}MPH United PO ${mphPONum} -- ${customerName} | Ship ${order.shipDate}`,
         body: `Hello
 
 Please find below Purchase Order ${mphPONum} from MPH United.
@@ -801,7 +825,7 @@ ${vendor.notes}
 Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # ${mphPONum} on all correspondence and shipping documents.`
       }, {
         to: `${customerName} <${order.customerEmail || ''}>`,
-        subject: `Order Confirmation -- MPH United PO ${mphPONum} | Customer PO ${order.customerPO}`,
+        subject: `${order.isRevised ? '[REVISED] ' : ''}Order Confirmation -- MPH United PO ${mphPONum} | Customer PO ${order.customerPO}`,
         body: `Hello
 
 Thank you for this order. We have confirmed your shipping details as follows:
@@ -837,11 +861,14 @@ Please do not hesitate to reach out with any questions.`
 // -- RENDER PO -------------------------------------------------------------
 function renderPO(o) {
   const hasPN = o.lines.some(l => l.pn);
-  const linesHtml = o.lines.map(l => `<tr><td>${l.desc}${l.pn ? `<br><span style="font-size:10px;color:var(--gold);font-family:'IBM Plex Mono',monospace">P/N: ${l.pn}</span>` : ''}</td><td>${l.qty||'--'}</td><td>${fmtCur(l.price)}</td><td>${l.qty&&l.price?fmtCur(l.qty*l.price):'--'}</td></tr>`).join('');
+  const linesHtml = o.lines.map(l => {
+    const descHtml = escHtml(l.desc).replace(/\n/g,'<br>');
+    return `<tr><td>${descHtml}${l.pn ? `<br><span style="font-size:10px;color:var(--gold);font-family:'IBM Plex Mono',monospace">P/N: ${escHtml(l.pn)}</span>` : ''}</td><td>${l.qty||'--'}</td><td>${fmtCur(l.price)}</td><td>${l.qty&&l.price?fmtCur(l.qty*l.price):'--'}</td></tr>`;
+  }).join('');
   document.getElementById('poPaper').innerHTML = `
     <div class="po-top">
       <div class="po-company" style="display:flex;align-items:center;gap:16px;"><img src="data:image/png;base64,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" style="width:72px;height:72px;object-fit:contain;"><h1>MPH UNITED</h1></div>
-      <div class="po-badge"><div class="po-title">PURCHASE ORDER</div><div class="po-number">${mphPONum}</div><div class="po-date">${o.orderDate}</div></div>
+      <div class="po-badge"><div class="po-title" style="${o.isRevised?'color:var(--rust);font-size:20px;':''}>${o.isRevised?'REVISED PURCHASE ORDER':'PURCHASE ORDER'}</div><div class="po-number">${mphPONum}</div><div class="po-date">${o.orderDate}</div></div>
     </div>
     <div class="po-meta">
       <div class="po-meta-box"><div class="po-meta-label">Vendor</div><div class="po-meta-value">${o.vendor.name}<br><span style="font-size:10px;color:var(--ink2)">${o.vendor.address.replace(/\n/g,'<br>')}</span><br><span style="font-size:10px;color:var(--ink2)">${o.vendor.contact} -- ${o.vendor.phone}</span></div></div>
@@ -858,7 +885,7 @@ function renderPO(o) {
       <tbody>${linesHtml}</tbody>
       <tfoot><tr><td colspan="3" class="total-label">Order Total</td><td class="total-val">${o.total>0?fmtCur(o.total):'TBD'}</td></tr></tfoot>
     </table>
-    ${o.specialInstructions?`<div class="po-notes"><div class="po-notes-label">Special Instructions</div><div class="po-notes-text">${o.specialInstructions}</div></div>`:''}
+    ${o.specialInstructions?`<div class="po-notes"><div class="po-notes-label">Special Instructions</div><div class="po-notes-text">${escHtml(o.specialInstructions).replace(/\n/g,'<br>')}</div></div>`:''}
     <div class="po-sig"><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Authorized -- MPH United</div></div><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Vendor Acknowledgement</div></div></div>`;
 }
 
