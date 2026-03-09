@@ -506,11 +506,11 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
         <div class="po-paper" id="poPaper"></div>
       </div>
       <div class="output-panel" id="outPanel1">
-        <div class="po-actions"><button class="btn-action" id="copyV" onclick="copyEmail(0,'copyV')">Copy Email</button></div>
+        <div class="po-actions"><button class="btn-action" id="copyV" onclick="copyEmail(0,'copyV')">Copy Email</button><button class="btn-action primary" onclick="openInOutlook(0)">✉ Open in Outlook</button></div>
         <div class="email-preview" id="emailDiv0"></div>
       </div>
       <div class="output-panel" id="outPanel2">
-        <div class="po-actions"><button class="btn-action" id="copyC" onclick="copyEmail(1,'copyC')">Copy Email</button></div>
+        <div class="po-actions"><button class="btn-action" id="copyC" onclick="copyEmail(1,'copyC')">Copy Email</button><button class="btn-action primary" onclick="openInOutlook(1)">✉ Open in Outlook</button></div>
         <div class="email-preview" id="emailDiv1"></div>
       </div>
     </div>
@@ -924,6 +924,15 @@ function copyEmail(idx, btnId) {
   const btn = document.getElementById(btnId);
   btn.textContent='(ok) Copied!'; btn.classList.add('copied');
   setTimeout(()=>{btn.textContent='Copy Email';btn.classList.remove('copied');},2000);
+}
+
+function openInOutlook(idx) {
+  const e = generatedEmails[idx];
+  // Extract raw email address from "Name <email@addr>" format
+  const toMatch = e.to.match(/<([^>]+)>/);
+  const toAddr = toMatch ? toMatch[1] : e.to;
+  const mailto = `mailto:${encodeURIComponent(toAddr)}?subject=${encodeURIComponent(e.subject)}&body=${encodeURIComponent(e.body)}`;
+  window.location.href = mailto;
 }
 </script>
 <!-- ADD CUSTOMER MODAL -->
