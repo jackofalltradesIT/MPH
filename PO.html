@@ -176,7 +176,9 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 .email-row:last-child { margin-bottom: 0; }
 .email-row-label { font-size: 10px; font-weight: 600; color: var(--gold); width: 55px; flex-shrink: 0; text-transform: uppercase; }
 .email-row-val { color: var(--ink); font-family: 'Aptos', 'Inter', sans-serif; font-size: 12px; }
-.email-preview-body { padding: 20px; font-size: 13.5px; line-height: 1.8; color: var(--ink); white-space: pre-wrap; }
+.email-preview-body { padding: 20px; font-size: 13.5px; line-height: 1.8; color: var(--ink); }
+#toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px); background:#1a1612; color:#f2ede6; padding:12px 24px; border-radius:8px; font-size:13px; font-family:'Aptos','Inter',sans-serif; transition:transform 0.3s ease; z-index:9999; white-space:nowrap; pointer-events:none; box-shadow:0 4px 16px rgba(26,22,18,0.3); }
+#toast.show { transform:translateX(-50%) translateY(0); }
 
 @media print {
   .topbar, .sidebar, .po-actions, .output-tabs { display: none !important; }
@@ -805,46 +807,15 @@ async function generatePO() {
       const qtyPriceList = lines.map(l => `Qty: ${l.qty||'--'}   Buy Price: ${fmtCur(l.price)}`).join('\n');
       const qtyPriceListSell = lines.map(l => `Qty: ${l.qty||'--'}   Price: ${l.sell > 0 ? fmtCur(l.sell) : fmtCur(l.price)}`).join('\n');
       generatedEmails = [{
-        to: `${vendor.contact} <${vendor.email || vendor.phone}>`,
+        to: vendor.contact || '',
         subject: `${order.isRevised ? '[REVISED] ' : ''}MPH United PO ${mphPONum} -- ${customerName} | Ship ${order.shipDate}`,
-        body: `Hello
-
-Please find below Purchase Order ${mphPONum} from MPH United.
-
-PRODUCTS ORDERED:
-${descList}
-
-Ship Date: ${order.shipDate}
-Ship Via: ${order.shipVia}
-MPH PO #: ${mphPONum}
-${!order.isBlind ? `Customer PO #: ${order.customerPO}` : ''}
-${qtyPriceList}
-${!order.isBlind ? `\nSHIP TO: ${order.customerName}\n${order.shipTo}` : ''}
-${order.specialInstructions ? '\nPO NOTES:\n' + order.specialInstructions : ''}
-DOCK HOURS: ${vendor.dockHours}
-${vendor.notes}
-
-Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # ${mphPONum} on all correspondence and shipping documents.`
+        body: 'Hello\n\nPlease find below Purchase Order ' + mphPONum + ' from MPH United.\n\nPRODUCTS ORDERED:\n' + descList + '\n\nShip Date: ' + order.shipDate + '\nShip Via: ' + order.shipVia + '\nMPH PO #: ' + mphPONum + (!order.isBlind ? '\nCustomer PO #: ' + order.customerPO : '') + '\n' + qtyPriceList + (!order.isBlind ? '\n\nSHIP TO: ' + order.customerName + '\n' + order.shipTo : '') + (order.specialInstructions ? '\n\nPO NOTES:\n' + order.specialInstructions : '') + '\n\nDOCK HOURS: ' + (vendor.dockHours||'') + (vendor.notes ? '\n' + vendor.notes : '') + '\n\nPlease confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # ' + mphPONum + ' on all correspondence and shipping documents.',
+        bodyHtml: buildVendorEmailHtml(order, vendor, lines, mphPONum)
       }, {
         to: `${customerName} <${order.customerEmail || ''}>`,
         subject: `${order.isRevised ? '[REVISED] ' : ''}Order Confirmation -- MPH United PO ${mphPONum} | Customer PO ${order.customerPO}`,
-        body: `Hello
-
-Thank you for this order. We have confirmed your shipping details as follows:
-
-${descList}
-
-${qtyPriceListSell}
-
-MPH PO #: ${mphPONum}
-Customer PO: ${order.customerPO}
-Ship Date: ${order.shipDate}
-Ship Via: ${order.shipVia}
-Payment Terms: Net 30
-
-SHIP TO: ${order.shipTo}
-
-Please do not hesitate to reach out with any questions.`
+        body: 'Hello\n\nThank you for this order. We have confirmed your shipping details as follows:\n\n' + descList + '\n\n' + qtyPriceListSell + '\n\nMPH PO #: ' + mphPONum + '\nCustomer PO: ' + order.customerPO + '\nShip Date: ' + order.shipDate + '\nShip Via: ' + order.shipVia + '\nPayment Terms: Net 30\n\nSHIP TO: ' + order.shipTo + '\n\nPlease do not hesitate to reach out with any questions.',
+        bodyHtml: buildCustomerEmailHtml(order, lines, mphPONum)
       }];
       setLoading(false);
     renderPO(order);
@@ -895,13 +866,93 @@ function renderPO(o) {
     <div class="po-sig"><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Authorized -- MPH United</div></div><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Vendor Acknowledgement</div></div></div>`;
 }
 
+function buildVendorEmailHtml(o, v, ls, poNum) {
+  var rows = ls.map(function(l) {
+    var dh = escHtml(l.desc||'').replace(/\n/g,'<br>');
+    var tot = l.qty && l.price ? fmtCur(l.qty * l.price) : '--';
+    var r = '<tr>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;">' + dh;
+    if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
+    r += '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + tot + '</td>';
+    r += '</tr>';
+    return r;
+  }).join('');
+  var h = '<div style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;max-width:680px;line-height:1.6;">';
+  h += '<p style="margin:0 0 12px;">Hello,</p>';
+  h += '<p style="margin:0 0 20px;">Please find below Purchase Order <strong>' + poNum + '</strong> from MPH United.</p>';
+  h += '<p style="margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
+  h += '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;">';
+  h += '<thead><tr style="background:#1a1612;color:#f2ede6;">';
+  h += '<th style="padding:8px 10px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;">Description</th>';
+  h += '<th style="padding:8px 10px;text-align:center;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:50px;">Qty</th>';
+  h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Buy Price</th>';
+  h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
+  h += '</tr></thead><tbody>' + rows + '</tbody></table>';
+  h += '<table style="border-collapse:collapse;margin-bottom:20px;font-size:13px;">';
+  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:4px 0;">' + escHtml(o.shipDate) + '</td></tr>';
+  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
+  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
+  if (!o.isBlind) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO #</td><td style="padding:4px 0;">' + escHtml(o.customerPO) + '</td></tr>';
+  h += '</table>';
+  if (!o.isBlind) h += '<p style="margin:0 0 16px;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p>';
+  if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:16px;font-size:13px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
+  h += '<p style="margin:0 0 4px;font-size:13px;"><strong>Dock Hours:</strong> ' + escHtml(v.dockHours||'') + '</p>';
+  if (v.notes) h += '<p style="margin:0 0 16px;font-size:13px;">' + escHtml(v.notes) + '</p>';
+  h += '<p style="margin:20px 0 0;font-size:13px;">Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
+  h += '</div>';
+  return h;
+}
+
+function buildCustomerEmailHtml(o, ls, poNum) {
+  var rows = ls.map(function(l) {
+    var dh = escHtml(l.desc||'').replace(/\n/g,'<br>');
+    var sp = l.sell > 0 ? l.sell : l.price;
+    var tot = l.qty && sp ? fmtCur(l.qty * sp) : '--';
+    var r = '<tr>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;">' + dh;
+    if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
+    r += '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(sp) + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + tot + '</td>';
+    r += '</tr>';
+    return r;
+  }).join('');
+  var h = '<div style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;max-width:680px;line-height:1.6;">';
+  h += '<p style="margin:0 0 12px;">Hello,</p>';
+  h += '<p style="margin:0 0 20px;">Thank you for this order. We have confirmed your shipping details as follows:</p>';
+  h += '<p style="margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Order Details</p>';
+  h += '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;">';
+  h += '<thead><tr style="background:#1a1612;color:#f2ede6;">';
+  h += '<th style="padding:8px 10px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;">Description</th>';
+  h += '<th style="padding:8px 10px;text-align:center;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:50px;">Qty</th>';
+  h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Price</th>';
+  h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
+  h += '</tr></thead><tbody>' + rows + '</tbody></table>';
+  h += '<table style="border-collapse:collapse;margin-bottom:20px;font-size:13px;">';
+  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
+  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO</td><td style="padding:4px 0;">' + escHtml(o.customerPO) + '</td></tr>';
+  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:4px 0;">' + escHtml(o.shipDate) + '</td></tr>';
+  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
+  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Payment Terms</td><td style="padding:4px 0;">Net 30</td></tr>';
+  h += '</table>';
+  h += '<p style="margin:0 0 16px;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p>';
+  h += '<p style="margin:0;font-size:13px;">Please do not hesitate to reach out with any questions.</p>';
+  h += '</div>';
+  return h;
+}
+
 function renderEmailDiv(id, e) {
+  const toRow = e.to ? `<div class="email-row"><span class="email-row-label">To</span><span class="email-row-val">${e.to}</span></div>` : '';
   document.getElementById(id).innerHTML = `
     <div class="email-preview-header">
-      <div class="email-row"><span class="email-row-label">To</span><span class="email-row-val">${e.to}</span></div>
+      ${toRow}
       <div class="email-row"><span class="email-row-label">Subject</span><span class="email-row-val">${e.subject}</span></div>
     </div>
-    <div class="email-preview-body">${e.body}</div>`;
+    <div class="email-preview-body">${e.bodyHtml}</div>`;
 }
 
 function switchTab(idx, btn) {
@@ -928,11 +979,30 @@ function copyEmail(idx, btnId) {
 
 function openInOutlook(idx) {
   const e = generatedEmails[idx];
-  // Extract raw email address from "Name <email@addr>" format
   const toMatch = e.to.match(/<([^>]+)>/);
-  const toAddr = toMatch ? toMatch[1] : e.to;
-  const mailto = `mailto:${encodeURIComponent(toAddr)}?subject=${encodeURIComponent(e.subject)}&body=${encodeURIComponent(e.body)}`;
+  const toAddr = toMatch ? toMatch[1] : '';
+  // Copy HTML body to clipboard so user can paste into Outlook
+  try {
+    const htmlBlob = new Blob([e.bodyHtml], {type: 'text/html'});
+    const textBlob = new Blob([e.body], {type: 'text/plain'});
+    navigator.clipboard.write([new ClipboardItem({'text/html': htmlBlob, 'text/plain': textBlob})]);
+  } catch(err) {
+    navigator.clipboard.writeText(e.body);
+  }
+  // Open Outlook with To + Subject pre-filled (paste HTML body with Ctrl+V)
+  let mailto = 'mailto:';
+  if (toAddr) mailto += encodeURIComponent(toAddr);
+  mailto += '?subject=' + encodeURIComponent(e.subject);
   window.location.href = mailto;
+  showToast('Outlook opened — press Ctrl+V to paste the formatted email body');
+}
+
+function showToast(msg, duration) {
+  duration = duration || 3500;
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
 }
 </script>
 <!-- ADD CUSTOMER MODAL -->
@@ -1512,5 +1582,6 @@ function matchVendorKey(v, sheet) {
 setTimeout(initMsal, 300);
 
 </script>
+<div id="toast"></div>
 </body>
 </html>
