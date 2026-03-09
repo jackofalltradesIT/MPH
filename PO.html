@@ -868,12 +868,15 @@ function renderPO(o) {
 function buildVendorEmailHtml(o, v, ls, poNum) {
   var rows = ls.map(function(l) {
     var dh = escHtml(l.desc||'').replace(/\n/g,'<br>');
+    var qty = parseFloat(l.qty) || 0;
+    var total = qty * (parseFloat(l.price) || 0);
     var r = '<tr>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;">' + dh;
     if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
     r += '</td>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:100px;">' + fmtCur(l.price) + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
     r += '</tr>';
     return r;
   }).join('');
@@ -885,7 +888,8 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
   h += '<th style="padding:8px 10px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;">Description</th>';
   h += '<th style="padding:8px 10px;text-align:center;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:50px;">Qty</th>';
-  h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:100px;">Buy Price</th>';
+  h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Buy Price</th>';
+  h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + rows + '</tbody></table>';
   h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:13px;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:4px 0;">' + escHtml(o.shipDate) + '</td></tr>';
