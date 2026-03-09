@@ -317,7 +317,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     </div>
   </div>
   <div class="import-footer">
-    <div class="import-footer-hint" id="importFooterHint">Select 1 row to load • Select 2 rows for a Split Load</div>
+    <div class="import-footer-hint" id="importFooterHint">Select 1 row to load • Select up to 4 rows for Split Loads • Select 3 rows for Wash &amp; Return</div>
     <div style="display:flex;gap:8px;">
       <button class="btn-load-order" id="btnLoadSplit" onclick="loadAsSplitLoad()" disabled style="background:var(--green);display:none;">⚡ Load as Split Load →</button>
       <button class="btn-load-order" id="btnLoadWR" onclick="loadAsWashReturn()" disabled style="background:#1a3a6e;display:none;">♻ Wash &amp; Return →</button>
@@ -1363,7 +1363,7 @@ function filterImportTable() {
   document.getElementById("btnLoadSplit").disabled = true;
   document.getElementById("btnLoadWR").style.display = "none";
   document.getElementById("btnLoadWR").disabled = true;
-  document.getElementById("importFooterHint").textContent = "Select 1 row to load • Select 2 rows for Split Load • Select 3 rows for Wash & Return";
+  document.getElementById("importFooterHint").textContent = "Select 1 row to load • Select up to 4 rows for Split Loads • Select 3 rows for Wash & Return";
   renderImportTable();
 }
 
@@ -1477,7 +1477,7 @@ function updateImportFooter() {
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnWR.style.display = "none"; btnWR.disabled = true;
-    hint.textContent = "Select 1 row to load • Select 2–4 rows for Split Load • Select exactly 3 rows for Wash & Return";
+    hint.textContent = "Select 1 row to load • Select up to 4 rows for Split Loads • Select 3 rows for Wash & Return";
     return;
   }
   const names = selIdxs.map(i => importFiltered[i].customer).join("  +  ");
