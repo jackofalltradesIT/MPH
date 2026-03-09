@@ -234,6 +234,14 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 .import-table tbody tr:hover { background:rgba(184,134,11,0.07); }
 .import-table tbody tr.selected { background:rgba(184,134,11,0.14); }
 .import-table tbody tr.selected2 { background:rgba(45,106,79,0.12); outline:2px solid rgba(45,106,79,0.4); outline-offset:-2px; }
+.import-table tbody tr.selected3 { background:rgba(59,130,246,0.12); outline:2px solid rgba(59,130,246,0.4); outline-offset:-2px; }
+.import-table tbody tr.selected4 { background:rgba(168,85,247,0.12); outline:2px solid rgba(168,85,247,0.4); outline-offset:-2px; }
+.wr-order-section { border:2px solid var(--gold); border-radius:6px; margin-bottom:16px; overflow:hidden; page-break-inside:avoid; }
+.wr-order-header { background:var(--ink); color:var(--bg); padding:8px 14px; }
+.wr-order-label { display:block; font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:2px; }
+.wr-order-customer { display:block; font-size:14px; font-weight:700; }
+.wr-order-meta { display:flex; gap:20px; font-size:11px; color:rgba(242,237,230,0.75); margin-top:4px; flex-wrap:wrap; }
+.wr-order-body { padding:12px 14px 8px; }
 .import-table td { padding:9px 12px; vertical-align:top; font-family:'Aptos', 'Inter', sans-serif; color:var(--ink); }
 .import-table td.td-status { white-space:nowrap; }
 .import-table td.td-desc { max-width:280px; font-size:11px; line-height:1.4; }
@@ -312,6 +320,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <div class="import-footer-hint" id="importFooterHint">Select 1 row to load • Select 2 rows for a Split Load</div>
     <div style="display:flex;gap:8px;">
       <button class="btn-load-order" id="btnLoadSplit" onclick="loadAsSplitLoad()" disabled style="background:var(--green);display:none;">⚡ Load as Split Load →</button>
+      <button class="btn-load-order" id="btnLoadWR" onclick="loadAsWashReturn()" disabled style="background:#1a3a6e;display:none;">♻ Wash &amp; Return →</button>
       <button class="btn-load-order" id="btnLoadOrder" onclick="loadSelectedOrder()" disabled>Load into PO Builder →</button>
     </div>
   </div>
@@ -438,6 +447,10 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
           <input type="date" id="shipDate">
         </div>
         <div class="field">
+          <label>ETA Delivery Date</label>
+          <input type="date" id="etaDate">
+        </div>
+        <div class="field">
           <label>Ship Via</label>
           <select id="shipVia">
             <option value="Customer Pickup (CPU)">Customer Pickup (CPU)</option>
@@ -497,7 +510,9 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       <div class="output-tabs">
         <button class="output-tab active" onclick="switchTab(0,this)">📄 PO Document</button>
         <button class="output-tab" onclick="switchTab(1,this)">📧 Vendor Email</button>
-        <button class="output-tab" onclick="switchTab(2,this)">📧 Customer Confirmation</button>
+        <button class="output-tab" id="tabCust1" onclick="switchTab(2,this)">📧 Customer Confirmation</button>
+        <button class="output-tab wr-only" onclick="switchTab(3,this)" style="display:none;">📧 Customer 2</button>
+        <button class="output-tab wr-only" onclick="switchTab(4,this)" style="display:none;">📧 Customer 3</button>
       </div>
       <div class="output-panel active" id="outPanel0">
         <div class="po-actions">
@@ -514,6 +529,14 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       <div class="output-panel" id="outPanel2">
         <div class="po-actions"><button class="btn-action" id="copyC" onclick="copyEmail(1,'copyC')">Copy Email</button><button class="btn-action primary" onclick="openInOutlook(1)">✉ Open in Outlook</button></div>
         <div class="email-preview" id="emailDiv1"></div>
+      </div>
+      <div class="output-panel" id="outPanel3">
+        <div class="po-actions"><button class="btn-action" id="copyC2" onclick="copyEmail(2,'copyC2')">Copy Email</button><button class="btn-action primary" onclick="openInOutlook(2)">✉ Open in Outlook</button></div>
+        <div class="email-preview" id="emailDiv2"></div>
+      </div>
+      <div class="output-panel" id="outPanel4">
+        <div class="po-actions"><button class="btn-action" id="copyC3" onclick="copyEmail(3,'copyC3')">Copy Email</button><button class="btn-action primary" onclick="openInOutlook(3)">✉ Open in Outlook</button></div>
+        <div class="email-preview" id="emailDiv3"></div>
       </div>
     </div>
   </div>
@@ -766,6 +789,10 @@ function setLoading(on, msg, sub) {
 
 // -- GENERATE PO -----------------------------------------------------------
 async function generatePO() {
+  // Reset W&R extras when doing a regular PO
+  document.querySelectorAll('.wr-only').forEach(el => el.style.display = 'none');
+  const tabCust1 = document.getElementById('tabCust1');
+  if (tabCust1) tabCust1.textContent = '📧 Customer Confirmation';
   const customerName = document.getElementById('customerSearch').value.trim() || document.getElementById('selectedCustomerName').value.trim();
   const vendorKey = document.getElementById('vendorSelect').value;
   if (!customerName) { alert('Please select or enter a customer name.'); return; }
@@ -786,6 +813,7 @@ async function generatePO() {
     customerEmail: document.getElementById('customerEmail').value.trim(),
     shipDate: fmtDate(document.getElementById('shipDate').value),
     shipVia: document.getElementById('shipVia').value,
+    eta: document.getElementById('etaDate').value.trim(),
     apptTime: document.getElementById('apptTime').value.trim(),
     partNumber: document.getElementById('partNumber').value.trim(),
     salesOrder: document.getElementById('salesOrder').value.trim(),
@@ -932,6 +960,7 @@ function buildCustomerEmailHtml(o, v, ls, poNum) {
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO</td><td style="padding:4px 0;">' + escHtml(o.customerPO) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:4px 0;">' + escHtml(o.shipDate) + '</td></tr>';
+  if (!isCPU && o.eta) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">ETA Delivery Date</td><td style="padding:4px 0;">' + escHtml(o.eta) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Payment Terms</td><td style="padding:4px 0;">Net 30</td></tr>';
   h += '</table>';
@@ -1120,6 +1149,8 @@ let importAllOrders = [];
 let importFiltered  = [];
 let importSelectedIdx = null;
 let importSelectedIdx2 = null;
+let importSelectedIdx3 = null;
+let importSelectedIdx4 = null;
 let pollTimer      = null;
 let lastModified   = null;
 
@@ -1325,10 +1356,14 @@ function filterImportTable() {
   });
   importSelectedIdx = null;
   importSelectedIdx2 = null;
+  importSelectedIdx3 = null;
+  importSelectedIdx4 = null;
   document.getElementById("btnLoadOrder").disabled = true;
   document.getElementById("btnLoadSplit").style.display = "none";
   document.getElementById("btnLoadSplit").disabled = true;
-  document.getElementById("importFooterHint").textContent = "Select 1 row to load • Select 2 rows for a Split Load";
+  document.getElementById("btnLoadWR").style.display = "none";
+  document.getElementById("btnLoadWR").disabled = true;
+  document.getElementById("importFooterHint").textContent = "Select 1 row to load • Select 2 rows for Split Load • Select 3 rows for Wash & Return";
   renderImportTable();
 }
 
@@ -1383,37 +1418,50 @@ function renderImportTable() {
 }
 
 function selectImportRow(i) {
-  // Toggle off if already selected
+  const el = j => document.getElementById("irow-"+j);
+  // Toggle off if already selected — shift remaining selections up
   if (importSelectedIdx === i) {
-    document.getElementById("irow-"+i).classList.remove("selected");
-    importSelectedIdx = importSelectedIdx2;
-    importSelectedIdx2 = null;
-    if (importSelectedIdx !== null) document.getElementById("irow-"+importSelectedIdx).classList.remove("selected2");
+    el(i).classList.remove("selected");
+    importSelectedIdx = importSelectedIdx2; importSelectedIdx2 = importSelectedIdx3; importSelectedIdx3 = importSelectedIdx4; importSelectedIdx4 = null;
+    if (importSelectedIdx !== null) { el(importSelectedIdx).classList.remove("selected2"); el(importSelectedIdx).classList.add("selected"); }
+    if (importSelectedIdx2 !== null) { el(importSelectedIdx2).classList.remove("selected3"); el(importSelectedIdx2).classList.add("selected2"); }
+    if (importSelectedIdx3 !== null) { el(importSelectedIdx3).classList.remove("selected4"); el(importSelectedIdx3).classList.add("selected3"); }
     updateImportFooter(); return;
   }
   if (importSelectedIdx2 === i) {
-    document.getElementById("irow-"+i).classList.remove("selected2");
-    importSelectedIdx2 = null;
+    el(i).classList.remove("selected2");
+    importSelectedIdx2 = importSelectedIdx3; importSelectedIdx3 = importSelectedIdx4; importSelectedIdx4 = null;
+    if (importSelectedIdx2 !== null) { el(importSelectedIdx2).classList.remove("selected3"); el(importSelectedIdx2).classList.add("selected2"); }
+    if (importSelectedIdx3 !== null) { el(importSelectedIdx3).classList.remove("selected4"); el(importSelectedIdx3).classList.add("selected3"); }
     updateImportFooter(); return;
   }
-  // First selection
+  if (importSelectedIdx3 === i) {
+    el(i).classList.remove("selected3");
+    importSelectedIdx3 = importSelectedIdx4; importSelectedIdx4 = null;
+    if (importSelectedIdx3 !== null) { el(importSelectedIdx3).classList.remove("selected4"); el(importSelectedIdx3).classList.add("selected3"); }
+    updateImportFooter(); return;
+  }
+  if (importSelectedIdx4 === i) {
+    el(i).classList.remove("selected4");
+    importSelectedIdx4 = null;
+    updateImportFooter(); return;
+  }
+  // Add new selection
   if (importSelectedIdx === null) {
-    importSelectedIdx = i;
-    document.getElementById("irow-"+i).classList.add("selected");
-  }
-  // Second selection — split load
-  else if (importSelectedIdx2 === null) {
-    importSelectedIdx2 = i;
-    document.getElementById("irow-"+i).classList.add("selected2");
-  }
-  // Third click — drop oldest, shift down
-  else {
-    document.getElementById("irow-"+importSelectedIdx).classList.remove("selected");
-    importSelectedIdx = importSelectedIdx2;
-    document.getElementById("irow-"+importSelectedIdx2).classList.remove("selected2");
-    document.getElementById("irow-"+importSelectedIdx).classList.add("selected");
-    importSelectedIdx2 = i;
-    document.getElementById("irow-"+i).classList.add("selected2");
+    importSelectedIdx = i; el(i).classList.add("selected");
+  } else if (importSelectedIdx2 === null) {
+    importSelectedIdx2 = i; el(i).classList.add("selected2");
+  } else if (importSelectedIdx3 === null) {
+    importSelectedIdx3 = i; el(i).classList.add("selected3");
+  } else if (importSelectedIdx4 === null) {
+    importSelectedIdx4 = i; el(i).classList.add("selected4");
+  } else {
+    // All 4 filled — drop oldest, shift all down, add new as selected4
+    el(importSelectedIdx).classList.remove("selected");
+    importSelectedIdx = importSelectedIdx2; el(importSelectedIdx2).classList.remove("selected2"); el(importSelectedIdx).classList.add("selected");
+    importSelectedIdx2 = importSelectedIdx3; el(importSelectedIdx3).classList.remove("selected3"); el(importSelectedIdx2).classList.add("selected2");
+    importSelectedIdx3 = importSelectedIdx4; el(importSelectedIdx4).classList.remove("selected4"); el(importSelectedIdx3).classList.add("selected3");
+    importSelectedIdx4 = i; el(i).classList.add("selected4");
   }
   updateImportFooter();
 }
@@ -1421,24 +1469,37 @@ function selectImportRow(i) {
 function updateImportFooter() {
   const btnLoad = document.getElementById("btnLoadOrder");
   const btnSplit = document.getElementById("btnLoadSplit");
+  const btnWR = document.getElementById("btnLoadWR");
   const hint = document.getElementById("importFooterHint");
-  if (importSelectedIdx === null) {
+  const selIdxs = [importSelectedIdx, importSelectedIdx2, importSelectedIdx3, importSelectedIdx4].filter(i => i !== null);
+  const count = selIdxs.length;
+  if (count === 0) {
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
-    hint.textContent = "Select 1 row to load • Select 2 rows for a Split Load";
+    btnWR.style.display = "none"; btnWR.disabled = true;
+    hint.textContent = "Select 1 row to load • Select 2–4 rows for Split Load • Select exactly 3 rows for Wash & Return";
     return;
   }
+  const names = selIdxs.map(i => importFiltered[i].customer).join("  +  ");
   const o1 = importFiltered[importSelectedIdx];
-  if (importSelectedIdx2 === null) {
+  if (count === 1) {
     btnLoad.disabled = false;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
+    btnWR.style.display = "none"; btnWR.disabled = true;
     const d = o1.desc||"";
-    hint.textContent = "Selected: " + o1.customer + " — " + d.slice(0,55) + (d.length>55?"…":"") + " • Click a 2nd row for Split Load";
+    hint.textContent = "Selected: " + o1.customer + " — " + d.slice(0,55) + (d.length>55?"…":"") + " • Click more rows for Split Load";
   } else {
-    const o2 = importFiltered[importSelectedIdx2];
+    // 2, 3, or 4 — always enable Split Load
     btnLoad.disabled = true;
     btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
-    hint.textContent = "⚡ Split Load: [1] " + o1.customer + "  +  [2] " + o2.customer;
+    if (count === 3) {
+      // W&R only available at exactly 3
+      btnWR.style.display = "inline-block"; btnWR.disabled = false;
+      hint.textContent = "⚡ Split Load (" + count + "): " + names + "  •  Or use ♻ Wash & Return";
+    } else {
+      btnWR.style.display = "none"; btnWR.disabled = true;
+      hint.textContent = "⚡ Split Load (" + count + "): " + names + (count < 4 ? " • Click another row to add (max 4)" : "");
+    }
   }
 }
 
@@ -1463,6 +1524,7 @@ function loadSelectedOrder() {
   if (o.alliance_so) document.getElementById("salesOrder").value = o.alliance_so;
   if (o.appt) document.getElementById("apptTime").value = o.appt;
   if (o.ship_date) document.getElementById("shipDate").value = o.ship_date.split("T")[0];
+  if (o.wanted_date) document.getElementById("etaDate").value = o.wanted_date.split("T")[0];
   if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
   const notes = o.po_notes || "";
   if (notes) document.getElementById("specialInstructions").value = notes;
@@ -1493,12 +1555,13 @@ function loadSelectedOrder() {
 }
 
 function loadAsSplitLoad() {
-  if (importSelectedIdx === null || importSelectedIdx2 === null) return;
-  const o1 = importFiltered[importSelectedIdx];
-  const o2 = importFiltered[importSelectedIdx2];
+  const selIdxs = [importSelectedIdx, importSelectedIdx2, importSelectedIdx3, importSelectedIdx4].filter(i => i !== null);
+  if (selIdxs.length < 2) return;
+  const rawOrders = selIdxs.map(i => importFiltered[i]);
+  const o1 = rawOrders[0];
   const pp = s => { const m=(s||"").match(/[\d.]+/); return m?m[0]:""; };
 
-  // Customer from first order
+  // Customer / contact from first order
   document.getElementById("customerSearch").value = o1.customer||"";
   document.getElementById("selectedCustomerName").value = o1.customer||"";
   const cm = CUSTOMERS.find(c => c.name.toLowerCase() === (o1.customer||"").toLowerCase());
@@ -1509,7 +1572,7 @@ function loadAsSplitLoad() {
     document.getElementById("customerCard").classList.remove("active");
   }
 
-  // Customer PO — same for both orders on a split load, use first
+  // Header fields from first order
   if (o1.cust_po) document.getElementById("customerPO").value = o1.cust_po;
   lastLoadedMphPO = o1.mph_po || '';
   if (document.getElementById('isRevised').checked && lastLoadedMphPO) {
@@ -1519,11 +1582,12 @@ function loadAsSplitLoad() {
   if (o1.alliance_so) document.getElementById("salesOrder").value = o1.alliance_so;
   if (o1.appt) document.getElementById("apptTime").value = o1.appt;
   if (o1.ship_date) document.getElementById("shipDate").value = o1.ship_date.split("T")[0];
+  if (o1.wanted_date) document.getElementById("etaDate").value = o1.wanted_date.split("T")[0];
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
-  // Notes flagged as SPLIT LOAD
-  const notes = ["SPLIT LOAD", o1.po_notes, o2.po_notes].filter(Boolean).join("\n\n");
-  document.getElementById("specialInstructions").value = notes;
+  // Notes: label as SPLIT LOAD + collect all non-empty notes
+  const allNotes = ["SPLIT LOAD"].concat(rawOrders.map(o => o.po_notes).filter(Boolean));
+  document.getElementById("specialInstructions").value = [...new Set(allNotes)].join("\n\n");
 
   // Vendor from first order
   const vk = matchVendorKey(o1.vendor, o1.sheet);
@@ -1537,32 +1601,189 @@ function loadAsSplitLoad() {
     else { const n=document.createElement("option"); n.value=o1.freight; n.textContent=o1.freight; el.appendChild(n); el.value=o1.freight; }
   }
 
-  // Two line items labeled as Split Load
+  // One line item per selected order, labeled SPLIT LOAD N
   const body = document.getElementById("lineBody");
   body.innerHTML = "";
   const ck = isCore(vk);
-
-  const tr1 = document.createElement("tr");
-  tr1.innerHTML = makeRowHTML("SPLIT LOAD 1 — " + (o1.desc||""), o1.pn||"", pp(o1.buy), ck);
-  body.appendChild(tr1);
-  const qty1 = tr1.querySelector(".li-qty");
-  if (qty1 && o1.qty) qty1.value = o1.qty;
-  const sell1 = tr1.querySelector(".li-sell");
-  if (sell1 && o1.sell) sell1.value = pp(o1.sell);
-
-  const tr2 = document.createElement("tr");
-  tr2.innerHTML = makeRowHTML("SPLIT LOAD 2 — " + (o2.desc||""), o2.pn||"", pp(o2.buy), ck);
-  body.appendChild(tr2);
-  const qty2 = tr2.querySelector(".li-qty");
-  if (qty2 && o2.qty) qty2.value = o2.qty;
-  const sell2 = tr2.querySelector(".li-sell");
-  if (sell2 && o2.sell) sell2.value = pp(o2.sell);
+  rawOrders.forEach((o, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = makeRowHTML("SPLIT LOAD " + (idx+1) + " — " + (o.desc||""), o.pn||"", pp(o.buy), ck);
+    body.appendChild(tr);
+    const qty = tr.querySelector(".li-qty");
+    if (qty && o.qty) qty.value = o.qty;
+    const sell = tr.querySelector(".li-sell");
+    if (sell && o.sell) sell.value = pp(o.sell);
+  });
 
   closeImport();
   const btn = document.getElementById("generateBtn");
   btn.style.background = "var(--green)";
-  btn.textContent = "⚡ Split Load Ready — Generate PO";
+  btn.textContent = "⚡ Split Load (" + selIdxs.length + " orders) — Generate PO";
   setTimeout(() => { btn.style.background=""; btn.textContent="⚡ Generate PO + All Emails"; }, 4000);
+}
+
+// ── WASH & RETURN PROGRAM ─────────────────────────────────────────────────
+
+function loadAsWashReturn() {
+  if (importSelectedIdx === null || importSelectedIdx2 === null || importSelectedIdx3 === null) return;
+  const rawOrders = [
+    importFiltered[importSelectedIdx],
+    importFiltered[importSelectedIdx2],
+    importFiltered[importSelectedIdx3]
+  ];
+  const pp = s => { const m=(s||"").match(/[\d.]+/); return m?m[0]:""; };
+
+  // Vendor from first order
+  const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet);
+  const vendor = vk ? VENDORS[vk] : null;
+  if (!vendor) { alert("Could not match a vendor for this Wash & Return order. Please verify the vendor on order 1."); return; }
+
+  mphPONum = genPONum();
+
+  // Build structured order objects
+  const orders = rawOrders.map(o => ({
+    customerName: o.customer || '',
+    customerPO: o.cust_po || '',
+    shipDate: o.ship_date ? o.ship_date.split("T")[0] : '',
+    shipTo: o.ship_to || '',
+    specialInstructions: o.po_notes || '',
+    customerEmail: (o.contacts||"").split("\n")[0].trim(),
+    lines: [{ desc: o.desc||'', pn: o.pn||'', price: parseFloat(pp(o.buy))||0, sell: parseFloat(pp(o.sell))||0, qty: o.qty||'' }]
+  }));
+
+  // Render W&R PO
+  document.getElementById('poPaper').innerHTML = renderWashReturnPO(orders, vendor, mphPONum);
+
+  // Build emails: [0] vendor (all 3), [1][2][3] customer confirmations
+  generatedEmails = [
+    {
+      to: vendor.contact || '',
+      subject: 'MPH United PO ' + mphPONum + ' — Wash & Return Program',
+      body: '',
+      bodyHtml: buildWRVendorEmailHtml(orders, vendor, mphPONum)
+    },
+    ...orders.map((o) => ({
+      to: o.customerEmail ? o.customerName + ' <' + o.customerEmail + '>' : '',
+      subject: 'Order Confirmation — MPH United PO ' + mphPONum + ' | Customer PO ' + o.customerPO,
+      body: '',
+      bodyHtml: buildCustomerEmailHtml(
+        { customerName: o.customerName, customerPO: o.customerPO, shipDate: o.shipDate, shipVia: 'CPU', shipTo: o.shipTo, specialInstructions: o.specialInstructions, isBlind: false, customerEmail: o.customerEmail },
+        vendor, o.lines, mphPONum
+      )
+    }))
+  ];
+
+  // Show W&R extra tabs and relabel customer 1
+  document.querySelectorAll('.wr-only').forEach(el => el.style.display = '');
+  const tabCust1 = document.getElementById('tabCust1');
+  if (tabCust1) tabCust1.textContent = '📧 Customer 1';
+
+  // Render all email previews
+  renderEmailDiv('emailDiv0', generatedEmails[0]);
+  renderEmailDiv('emailDiv1', generatedEmails[1]);
+  renderEmailDiv('emailDiv2', generatedEmails[2]);
+  renderEmailDiv('emailDiv3', generatedEmails[3]);
+
+  document.getElementById('poDocument').classList.add('active');
+  closeImport();
+  switchTab(0, document.querySelectorAll('.output-tab')[0]);
+}
+
+function renderWashReturnPO(orders, vendor, poNum) {
+  const logoSrc = document.querySelector('.topbar-logo img') ? document.querySelector('.topbar-logo img').src : '';
+  const sectionsHtml = orders.map((o, idx) => {
+    const linesHtml = o.lines.map(l => {
+      const descHtml = escHtml(l.desc||'').replace(/\n/g,'<br>');
+      const total = (l.qty && l.price) ? fmtCur(parseFloat(l.qty) * parseFloat(l.price)) : '--';
+      return `<tr>
+        <td>${descHtml}${l.pn ? `<br><span style="font-size:10px;color:var(--gold);font-family:'Aptos','Inter',sans-serif">P/N: ${escHtml(l.pn)}</span>` : ''}</td>
+        <td>${l.qty||'--'}</td><td>${fmtCur(l.price)}</td><td>${total}</td>
+      </tr>`;
+    }).join('');
+    return `<div class="wr-order-section">
+      <div class="wr-order-header">
+        <span class="wr-order-label">Order ${idx+1} — Wash &amp; Return</span>
+        <span class="wr-order-customer">${escHtml(o.customerName)}</span>
+        <div class="wr-order-meta">
+          <span><strong style="color:var(--gold)">Customer PO:</strong> ${escHtml(o.customerPO)}</span>
+          <span><strong style="color:var(--gold)">Ship Date:</strong> ${escHtml(o.shipDate)}</span>
+        </div>
+      </div>
+      <div class="wr-order-body">
+        ${o.shipTo ? `<div style="font-size:11px;color:var(--ink2);margin-bottom:10px;"><strong>Ship To:</strong> ${escHtml(o.shipTo).replace(/\n/g,', ')}</div>` : ''}
+        <table class="po-table" style="width:100%;margin-bottom:${o.specialInstructions?'10px':'0'}">
+          <thead><tr><th>Product / Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+          <tbody>${linesHtml}</tbody>
+        </table>
+        ${o.specialInstructions ? `<div class="po-notes"><div class="po-notes-label">PO Notes</div><div class="po-notes-text">${escHtml(o.specialInstructions).replace(/\n/g,'<br>')}</div></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="po-top">
+    <div class="po-company">${logoSrc ? `<img src="${logoSrc}" style="height:48px;object-fit:contain;">` : '<strong style="font-size:18px">MPH United</strong>'}
+      <div class="po-company-details">3600 Skokie Valley Rd, Suite 101<br>Highland Park, IL 60035<br>Accounts Payable: ap@mphunited.com</div>
+    </div>
+    <div class="po-badge">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:2px;">Wash &amp; Return Program</div>
+      <div class="po-title">Purchase Order</div>
+      <div class="po-number">${poNum}</div>
+    </div>
+  </div>
+  <div class="po-meta">
+    <div class="po-meta-box"><div class="po-meta-label">Vendor</div><div class="po-meta-value">${escHtml(vendor.name)}<br><span style="font-size:10px;color:var(--ink2)">${escHtml(vendor.address||'').replace(/\n/g,'<br>')}</span><br><span style="font-size:10px;color:var(--ink2)">${escHtml(vendor.contact||'')} -- ${escHtml(vendor.phone||'')}</span></div></div>
+    <div class="po-meta-box"><div class="po-meta-label">Ship Via</div><div class="po-meta-value">CPU — Wash &amp; Return</div></div>
+    <div class="po-meta-box"><div class="po-meta-label">MPH PO #</div><div class="po-meta-value">${poNum}</div></div>
+    <div class="po-meta-box"><div class="po-meta-label">Dock Hours</div><div class="po-meta-value" style="font-size:10px">${escHtml(vendor.dockHours||'--')}</div></div>
+  </div>
+  ${sectionsHtml}
+  <div class="po-sig"><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Authorized -- MPH United</div></div><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Vendor Acknowledgement</div></div></div>`;
+}
+
+function buildWRVendorEmailHtml(orders, vendor, poNum) {
+  var h = '<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
+  h += '<p style="margin:0 0 12px;">Hello,</p>';
+  h += '<p style="margin:0 0 20px;">Please find below Purchase Order <strong>' + poNum + '</strong> from MPH United for the <strong>Wash &amp; Return Program</strong>.</p>';
+
+  orders.forEach(function(o, idx) {
+    var rows = o.lines.map(function(l) {
+      var dh = escHtml(l.desc||'').replace(/\n/g,'<br>');
+      var qty = parseFloat(l.qty) || 0;
+      var total = qty * (parseFloat(l.price) || 0);
+      var r = '<tr>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;">' + dh;
+      if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
+      r += '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
+      r += '</tr>';
+      return r;
+    }).join('');
+
+    h += '<p style="margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Order ' + (idx+1) + ' — ' + escHtml(o.customerName) + '</p>';
+    h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:10px;font-size:13px;">';
+    h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO</td><td style="padding:3px 0;">' + escHtml(o.customerPO) + '</td></tr>';
+    h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:3px 0;">' + escHtml(o.shipDate) + '</td></tr>';
+    h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Ship To</td><td style="padding:3px 0;">' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</td></tr>';
+    h += '</table>';
+    h += '<table width="600" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;">';
+    h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
+    h += '<th style="padding:8px 10px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;">Description</th>';
+    h += '<th style="padding:8px 10px;text-align:center;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:50px;">Qty</th>';
+    h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Buy Price</th>';
+    h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
+    h += '</tr></thead><tbody>' + rows + '</tbody></table>';
+    if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:20px;font-size:13px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
+  });
+
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:13px;">';
+  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
+  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">CPU — Wash &amp; Return</td></tr>';
+  h += '</table>';
+  h += '<p style="margin:20px 0 0;font-size:13px;">Please confirm receipt of this PO and provide expected ship dates at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
+  h += '</td></tr></table>';
+  return h;
 }
 
 function matchVendorKey(v, sheet) {
