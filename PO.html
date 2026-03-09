@@ -973,27 +973,32 @@ function copyEmail(idx, btnId) {
   setTimeout(()=>{btn.textContent='Copy Email';btn.classList.remove('copied');},2000);
 }
 
-async function openInOutlook(idx) {
+function openInOutlook(idx) {
   const e = generatedEmails[idx];
   const toMatch = e.to.match(/<([^>]+)>/);
   const toAddr = toMatch ? toMatch[1] : '';
-  // Copy HTML body to clipboard (for optional paste into Outlook)
-  try {
-    const htmlBlob = new Blob([e.bodyHtml], {type: 'text/html'});
-    const textBlob = new Blob([e.body], {type: 'text/plain'});
-    await navigator.clipboard.write([new ClipboardItem({'text/html': htmlBlob, 'text/plain': textBlob})]);
-  } catch(err) {
-    try { await navigator.clipboard.writeText(e.body); } catch(e2) {}
-  }
-  // Open Outlook with To, Subject, and plain-text body pre-filled
+
+  // Build a .eml file with HTML body.
+  // X-Unsent: 1 tells Outlook to open it as a new compose window (not a read window).
+  const htmlBody = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>' + e.bodyHtml + '</body></html>';
+  let headers = 'MIME-Version: 1.0\r\n';
+  headers += 'X-Unsent: 1\r\n';
+  if (toAddr) headers += 'To: ' + toAddr + '\r\n';
+  headers += 'Subject: ' + e.subject + '\r\n';
+  headers += 'Content-Type: text/html; charset=UTF-8\r\n';
+  headers += '\r\n';
+
+  const blob = new Blob([headers + htmlBody], {type: 'message/rfc822'});
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = 'mailto:' + (toAddr ? encodeURIComponent(toAddr) : '')
-         + '?subject=' + encodeURIComponent(e.subject)
-         + '&body=' + encodeURIComponent(e.body);
+  a.href = url;
+  a.download = e.subject.replace(/[^\w\s\-]/g, '').trim().substring(0, 80) + '.eml';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  showToast('Outlook opened — to send as HTML, select all in body (Ctrl+A) then paste (Ctrl+V)');
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+  showToast('EML downloaded — double-click the file to open as HTML email in Outlook');
 }
 
 function showToast(msg, duration) {
