@@ -749,7 +749,8 @@ function genPONum() {
 }
 function printPO() {
   const orig = document.title;
-  document.title = 'MPH PO ' + (mphPONum || 'Document');
+  const isRev = document.getElementById('isRevised').checked;
+  document.title = (isRev ? 'Revised ' : '') + 'MPH PO ' + (mphPONum || 'Document');
   window.print();
   setTimeout(() => { document.title = orig; }, 1000);
 }
