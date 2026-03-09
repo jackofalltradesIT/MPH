@@ -689,7 +689,6 @@ function loadVendor() {
     (v.email ? `<strong>Email:</strong> ${v.email}<br>` : '') +
     `<strong>Dock:</strong> ${v.dockHours}<br>` +
     `<strong>Lead/Tech:</strong> ${v.leadContact}<br>` +
-    `<strong>Notes:</strong> ${v.notes}`;
   document.getElementById('vendorCard').classList.add('active');
 
   const coreVendor = isCore(key);
@@ -809,7 +808,7 @@ async function generatePO() {
       generatedEmails = [{
         to: vendor.contact || '',
         subject: `${order.isRevised ? '[REVISED] ' : ''}MPH United PO ${mphPONum} -- ${customerName} | Ship ${order.shipDate}`,
-        body: 'Hello\n\nPlease find below Purchase Order ' + mphPONum + ' from MPH United.\n\nPRODUCTS ORDERED:\n' + descList + '\n\nShip Date: ' + order.shipDate + '\nShip Via: ' + order.shipVia + '\nMPH PO #: ' + mphPONum + (!order.isBlind ? '\nCustomer PO #: ' + order.customerPO : '') + '\n' + qtyPriceList + (!order.isBlind ? '\n\nSHIP TO: ' + order.customerName + '\n' + order.shipTo : '') + (order.specialInstructions ? '\n\nPO NOTES:\n' + order.specialInstructions : '') + '\n\n' + (vendor.notes ? vendor.notes + '\n\n' : '') + 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # ' + mphPONum + ' on all correspondence and shipping documents.',
+        body: 'Hello\n\nPlease find below Purchase Order ' + mphPONum + ' from MPH United.\n\nPRODUCTS ORDERED:\n' + descList + '\n\nShip Date: ' + order.shipDate + '\nShip Via: ' + order.shipVia + '\nMPH PO #: ' + mphPONum + (!order.isBlind ? '\nCustomer PO #: ' + order.customerPO : '') + '\n' + qtyPriceList + (!order.isBlind ? '\n\nSHIP TO: ' + order.customerName + '\n' + order.shipTo : '') + (order.specialInstructions ? '\n\nPO NOTES:\n' + order.specialInstructions : '') + '\n\n' + 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # ' + mphPONum + ' on all correspondence and shipping documents.',
         bodyHtml: buildVendorEmailHtml(order, vendor, lines, mphPONum)
       }, {
         to: `${customerName} <${order.customerEmail || ''}>`,
@@ -896,7 +895,6 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '</table>';
   if (!o.isBlind) h += '<p style="margin:0 0 16px;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p>';
   if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:16px;font-size:13px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
-  if (v.notes) h += '<p style="margin:0 0 16px;font-size:13px;">' + escHtml(v.notes) + '</p>';
   h += '<p style="margin:20px 0 0;font-size:13px;">Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
   return h;
@@ -1039,7 +1037,6 @@ function showToast(msg, duration) {
     <div class="field"><label>Phone</label><input type="text" id="nv_phone"></div>
     <div class="field"><label>Email</label><input type="email" id="nv_email"></div>
     <div class="field"><label>Dock Hours / Instructions</label><textarea id="nv_dock"></textarea></div>
-    <div class="field"><label>Notes</label><textarea id="nv_notes"></textarea></div>
     <div class="field"><label>Lead Contact</label><input type="text" id="nv_lead"></div>
     <div class="field"><label>Products (one per line)</label><textarea id="nv_products" placeholder="IBC 275 Gal&#10;IBC 330 Gal"></textarea></div>
     <div class="modal-btns">
@@ -1069,13 +1066,13 @@ function saveNewVendor(){
   var prods=document.getElementById('nv_products').value.trim();
   var products=prods?prods.split('\n').filter(function(p){return p.trim();}).map(function(p){return {desc:p.trim(),price:''};}):[{desc:'Product',price:''}];
   var key='custom_'+Date.now();
-  VENDORS[key]={name:name,address:document.getElementById('nv_address').value.trim(),contact:document.getElementById('nv_contact').value.trim()||'Contact',phone:document.getElementById('nv_phone').value.trim()||'--',email:document.getElementById('nv_email').value.trim(),dockHours:document.getElementById('nv_dock').value.trim()||'--',notes:document.getElementById('nv_notes').value.trim()||'--',leadContact:document.getElementById('nv_lead').value.trim()||'--',products:products};
+  VENDORS[key]={name:name,address:document.getElementById('nv_address').value.trim(),contact:document.getElementById('nv_contact').value.trim()||'Contact',phone:document.getElementById('nv_phone').value.trim()||'--',email:document.getElementById('nv_email').value.trim(),dockHours:document.getElementById('nv_dock').value.trim()||'--',leadContact:document.getElementById('nv_lead').value.trim()||'--',products:products};
   var sel=document.getElementById('vendorSelect');
   var grp=document.getElementById('customVendorGroup');
   if(!grp){grp=document.createElement('optgroup');grp.label='Custom Added';grp.id='customVendorGroup';sel.appendChild(grp);}
   var opt=document.createElement('option');opt.value=key;opt.textContent=name+' (custom)';grp.appendChild(opt);
   sel.value=key;loadVendor();
-  ['nv_name','nv_address','nv_contact','nv_phone','nv_email','nv_dock','nv_notes','nv_lead','nv_products'].forEach(function(id){document.getElementById(id).value='';});
+  ['nv_name','nv_address','nv_contact','nv_phone','nv_email','nv_dock','nv_lead','nv_products'].forEach(function(id){document.getElementById(id).value='';});
   closeModal('vendorModal');
 }
 
