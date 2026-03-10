@@ -291,6 +291,11 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
   </div>
   <div class="import-body">
     <div class="import-controls">
+      <!-- Source Toggle -->
+      <div style="display:flex;gap:6px;margin-bottom:8px;width:100%;">
+        <button id="srcBtnOrders" onclick="switchImportSource('orders')" style="flex:1;padding:8px 12px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;border-radius:8px;cursor:pointer;transition:all 0.2s;border:2px solid var(--gold);background:var(--gold);color:var(--ink);">📦 MPH Orders</button>
+        <button id="srcBtnRecycling" onclick="switchImportSource('recycling')" style="flex:1;padding:8px 12px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;border-radius:8px;cursor:pointer;transition:all 0.2s;border:2px solid rgba(45,106,79,0.5);background:transparent;color:var(--green);">♻ Recycling Orders</button>
+      </div>
       <div class="import-upload-zone" id="uploadZone" style="cursor:pointer;" onclick="signIn()">
         <div class="import-upload-icon" id="uploadIcon">🔐</div>
         <div class="import-upload-text">
@@ -300,7 +305,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
         <div id="liveIndicator" style="display:none;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);margin-left:auto;flex-shrink:0;"></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;width:100%;">
-        <button onclick="loadOrdersFromSharePoint()" style="flex-shrink:0;background:rgba(45,106,79,0.15);color:var(--green);border:1px solid rgba(45,106,79,0.4);border-radius:8px;padding:8px 14px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;transition:all 0.2s;white-space:nowrap;" onmouseover="this.style.background='rgba(45,106,79,0.3)'" onmouseout="this.style.background='rgba(45,106,79,0.15)'">↻ Refresh</button>
+        <button onclick="refreshImport()" style="flex-shrink:0;background:rgba(45,106,79,0.15);color:var(--green);border:1px solid rgba(45,106,79,0.4);border-radius:8px;padding:8px 14px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;transition:all 0.2s;white-space:nowrap;" onmouseover="this.style.background='rgba(45,106,79,0.3)'" onmouseout="this.style.background='rgba(45,106,79,0.15)'">↻ Refresh</button>
         <select class="import-filter" id="filterVendorSheet" onchange="filterImportTable()" disabled style="flex-shrink:0;min-width:220px;">
           <option value="">All Vendors</option>
         </select>
@@ -1134,6 +1139,16 @@ const MSAL_CONFIG = {
 const GRAPH_SCOPES  = ["Files.Read.All", "Sites.Read.All"];
 const DRIVE_ID      = "b!N48Wq05iEEOzX1swiNCEk8EKL-4bQeBMn0eOwmpi5atLWWczvFYQQrxH9feF-RUh";
 const FILE_NAME     = "MPH Orders.xlsm";
+// NOTE: RECYCLING_DRIVE_ID uses the same SharePoint drive as MPH Orders.
+// If the Recycling file is in a different library, update RECYCLING_DRIVE_ID below.
+const RECYCLING_DRIVE_ID   = DRIVE_ID;
+const RECYCLING_FILE_NAME  = "MPH Recycling Orders.xlsm";
+const RECYCLING_STATUSES   = new Set(["READY TO PICKUP","READY TO SHIP"]);
+const RECYCLING_SHEETS     = [
+  'Coastal Container','RRG(Rural Recycling Grinding)','UGC(United Container Group)',
+  'STS(Superior Tote Solutions)','SEC(SouthEast Container)','GPC(Great Plains Container)',
+  '5 Star','Responsible Container'
+];
 const POLL_INTERVAL = 30000;
 
 const VENDOR_SHEETS = [
@@ -1150,6 +1165,7 @@ const VENDOR_SHEETS = [
 let msalInstance   = null;
 let importAllOrders = [];
 let importFiltered  = [];
+let importSource    = 'orders';  // 'orders' | 'recycling'
 let importSelectedIdx = null;
 let importSelectedIdx2 = null;
 let importSelectedIdx3 = null;
@@ -1199,7 +1215,7 @@ async function signIn() {
   }
   try {
     await msalInstance.loginPopup({ scopes: GRAPH_SCOPES });
-    loadOrdersFromSharePoint();
+    refreshImport();
   } catch(e) {
     console.error("Login failed:", e);
     setImportStatus("error", 0, 0, "", e.message);
@@ -1286,9 +1302,145 @@ async function pollChanges() {
   try {
     const token = await getToken();
     if (!token) return;
-    const meta = await graphGet("/drives/" + DRIVE_ID + "/root:/" + FILE_NAME);
-    if (meta.lastModifiedDateTime !== lastModified) loadOrdersFromSharePoint();
+    const driveId = importSource === 'recycling' ? RECYCLING_DRIVE_ID : DRIVE_ID;
+    const fileName = importSource === 'recycling' ? RECYCLING_FILE_NAME : FILE_NAME;
+    const meta = await graphGet("/drives/" + driveId + "/root:/" + fileName);
+    if (meta.lastModifiedDateTime !== lastModified) refreshImport();
   } catch(e) {}
+}
+
+// ── SOURCE SWITCH & REFRESH ───────────────────────────────────────────────
+function refreshImport() {
+  if (importSource === 'recycling') loadRecyclingOrdersFromSharePoint();
+  else loadOrdersFromSharePoint();
+}
+
+function switchImportSource(src) {
+  if (importSource === src) return;
+  importSource = src;
+  // Update toggle button styles
+  const bOrders    = document.getElementById("srcBtnOrders");
+  const bRecycling = document.getElementById("srcBtnRecycling");
+  if (src === 'recycling') {
+    bOrders.style.background    = 'transparent';
+    bOrders.style.color         = 'var(--gold)';
+    bOrders.style.border        = '2px solid rgba(184,134,11,0.5)';
+    bRecycling.style.background = 'var(--green)';
+    bRecycling.style.color      = '#fff';
+    bRecycling.style.border     = '2px solid var(--green)';
+  } else {
+    bOrders.style.background    = 'var(--gold)';
+    bOrders.style.color         = 'var(--ink)';
+    bOrders.style.border        = '2px solid var(--gold)';
+    bRecycling.style.background = 'transparent';
+    bRecycling.style.color      = 'var(--green)';
+    bRecycling.style.border     = '2px solid rgba(45,106,79,0.5)';
+  }
+  // Clear current table
+  importAllOrders = []; importFiltered = [];
+  importSelectedIdx = null; importSelectedIdx2 = null;
+  importSelectedIdx3 = null; importSelectedIdx4 = null;
+  document.getElementById("btnLoadOrder").disabled  = true;
+  document.getElementById("btnLoadSplit").style.display = "none";
+  document.getElementById("btnLoadSplit").disabled  = true;
+  document.getElementById("btnLoadWR").style.display = "none";
+  document.getElementById("btnLoadWR").disabled  = true;
+  const vf = document.getElementById("filterVendorSheet");
+  vf.innerHTML = '<option value="">All Vendors</option>'; vf.disabled = true;
+  document.getElementById("importSearch").value = ""; document.getElementById("importSearch").disabled = true;
+  document.getElementById("importTableWrap").innerHTML = '<div class="import-empty"><div class="ie-icon">⏳</div><h3>Loading…</h3><p>Switching source…</p></div>';
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  getToken().then(t => { if (t) refreshImport(); else setImportStatus("signin"); });
+}
+
+// ── LOAD RECYCLING ORDERS ─────────────────────────────────────────────────
+async function loadRecyclingOrdersFromSharePoint() {
+  setImportStatus("loading");
+  try {
+    const meta   = await graphGet("/drives/" + RECYCLING_DRIVE_ID + "/root:/" + RECYCLING_FILE_NAME);
+    const buffer = await graphGet("/drives/" + RECYCLING_DRIVE_ID + "/items/" + meta.id + "/content", true);
+    const wb     = XLSX.read(buffer, { type: "array", cellDates: true, dateNF: "yyyy-mm-dd" });
+    const orders = [], sheetsFound = [];
+
+    for (const sheetName of RECYCLING_SHEETS) {
+      if (!wb.SheetNames.includes(sheetName)) continue;
+      const ws   = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:"", raw:false, dateNF:"yyyy-mm-dd" });
+      // Header is row index 1 (Excel row 2), data starts index 2
+      const hdr = rows[1] || [];
+      if (!hdr.includes("MPH PO")) continue;
+      sheetsFound.push(sheetName);
+
+      const isCoastal = sheetName === 'Coastal Container';
+      const col = n => hdr.indexOf(n);
+
+      let C;
+      if (isCoastal) {
+        // Coastal Container has a unique layout
+        C = {
+          status:   col("Order Status"),     csr:      col("Sales Person/CSR"),
+          mph_po:   col("MPH PO"),           cust_po:  col("Customer PO"),
+          desc:     col("Description"),      qty:      col("Qty"),
+          ship_date:col("Ship Date"),        vendor:   col("Vendor"),
+          buy:      col("CSN pays MPH"),     sell:     col("MPH pays CCS"),
+          customer: col("Customer"),         ship_to:  col("Ship From"),
+          contacts: col("Customer Order Confirmation Contacts"),
+          po_notes: col("Invoice Notes"),
+          freight:  -1,  wanted_date: -1,   appt: -1
+        };
+      } else {
+        // Standard recycling layout (RRG, UGC, STS, SEC, GPC, 5 Star, Responsible Container)
+        C = {
+          status:      col("Order Status"),                csr:      col("Sales Person/CSR"),
+          mph_po:      col("MPH PO"),                      cust_po:  col("Customer PO"),
+          desc:        col("Description"),                 qty:      col("Qty"),
+          ship_date:   col("Ship Date"),                   wanted_date: col("Delivery Date"),
+          appt:        col("Appt. Time"),                  vendor:   col("Vendor"),
+          buy:         col("BUY"),                         sell:     col("SELL"),
+          customer:    col("Customer"),                    ship_to:  col("Ship To or Pick Up Location"),
+          freight:     col("Freight"),                     contacts: -1,
+          po_notes:    col("PO Notes")
+        };
+      }
+
+      for (let r = 2; r < rows.length; r++) {
+        const row = rows[r]; if (!row) continue;
+        // Stop reading when ORDER CONFIRMATIONS SECTION marker found
+        const descVal = String(row[C.desc] ?? "").trim();
+        if (descVal.toUpperCase().includes("ORDER CONFIRMATIONS")) break;
+        const status = String(row[C.status] ?? "").trim();
+        if (!status || !RECYCLING_STATUSES.has(status)) continue;
+        const g = k => (C[k] >= 0) ? String(row[C[k]] ?? "").trim() : "";
+        const o = {}; for (const k of Object.keys(C)) o[k] = g(k);
+        o.sheet  = sheetName;
+        o.source = 'recycling';
+        // alliance_so, order_date, freight_notes, bill_to, misc not in recycling — set blank
+        o.alliance_so = ""; o.order_date = ""; o.freight_notes = ""; o.bill_to = ""; o.misc = "";
+        o.pn = "";
+        orders.push(o);
+      }
+    }
+
+    lastModified    = meta.lastModifiedDateTime;
+    importAllOrders = orders;
+
+    // Populate vendor filter with sheets that had data
+    const vf = document.getElementById("filterVendorSheet");
+    vf.innerHTML = '<option value="">All Vendors</option>' +
+      sheetsFound.map(s => '<option value="' + s + '">' + s.replace(/[()]/g,"") + "</option>").join("");
+    vf.disabled = false;
+    document.getElementById("importSearch").disabled = false;
+
+    setImportStatus("live", orders.length, sheetsFound.length, meta.lastModifiedDateTime);
+    filterImportTable();
+
+    if (!pollTimer) pollTimer = setInterval(pollChanges, POLL_INTERVAL);
+
+  } catch(e) {
+    if (e.message === "not_signed_in") setImportStatus("signin");
+    else setImportStatus("error", 0, 0, "", e.message);
+    console.error(e);
+  }
 }
 
 // ── STATUS UI ─────────────────────────────────────────────────────────────
@@ -1300,12 +1452,13 @@ function setImportStatus(state, count, sheets, modified, err) {
   const zone  = document.getElementById("uploadZone");
   const sub2  = document.getElementById("importSubtitle");
 
+  const activeFileName = importSource === 'recycling' ? RECYCLING_FILE_NAME : FILE_NAME;
   if (state === "live") {
     zone.onclick = null; zone.style.cursor = "default";
     zone.classList.add("loaded"); dot.style.display = "block";
-    icon.textContent = "📊";
+    icon.textContent = importSource === 'recycling' ? "♻" : "📊";
     label.textContent = "✓ Live — " + count + " orders across " + sheets + " sheets";
-    sub.textContent = "SharePoint: MPH Orders.xlsm";
+    sub.textContent = "SharePoint: " + activeFileName;
     let ago = "";
     if (modified) {
       const s = Math.round((Date.now() - new Date(modified).getTime()) / 1000);
@@ -1315,7 +1468,7 @@ function setImportStatus(state, count, sheets, modified, err) {
   } else if (state === "loading") {
     dot.style.display = "none"; zone.classList.remove("loaded");
     icon.textContent = "⏳"; label.textContent = "Loading orders from SharePoint…";
-    sub.textContent = "Downloading MPH Orders.xlsm"; sub2.textContent = "Please wait…";
+    sub.textContent = "Downloading " + activeFileName; sub2.textContent = "Please wait…";
   } else if (state === "signin") {
     dot.style.display = "none"; zone.classList.remove("loaded");
     zone.style.cursor = "pointer"; zone.onclick = signIn;
@@ -1337,10 +1490,10 @@ function openImport() {
   document.getElementById("importPanel").classList.add("open");
   if (!msalInstance) {
     initMsal().then(() => {
-      getToken().then(t => { if (t) loadOrdersFromSharePoint(); else setImportStatus("signin"); });
+      getToken().then(t => { if (t) refreshImport(); else setImportStatus("signin"); });
     });
   } else {
-    getToken().then(t => { if (t) loadOrdersFromSharePoint(); else setImportStatus("signin"); });
+    getToken().then(t => { if (t) refreshImport(); else setImportStatus("signin"); });
   }
 }
 
