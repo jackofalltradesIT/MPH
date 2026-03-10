@@ -1366,13 +1366,18 @@ async function loadRecyclingOrdersFromSharePoint() {
       if (!wb.SheetNames.includes(sheetName)) continue;
       const ws   = wb.Sheets[sheetName];
       const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:"", raw:false, dateNF:"yyyy-mm-dd" });
-      // Header is row index 1 (Excel row 2), data starts index 2
-      const hdr = rows[1] || [];
-      if (!hdr.includes("MPH PO")) continue;
+      // Dynamically find header row (scan first 5 rows for "MPH PO"), same approach as MPH Orders
+      let hdrIdx = -1, hdr = [];
+      for (let i = 0; i < Math.min(rows.length, 5); i++) {
+        const normalised = (rows[i] || []).map(h => String(h||"").trim().toLowerCase());
+        if (normalised.includes("mph po")) { hdrIdx = i; hdr = rows[i]; break; }
+      }
+      if (hdrIdx < 0) continue;
       sheetsFound.push(sheetName);
 
       const isCoastal = sheetName === 'Coastal Container';
-      const col = n => hdr.indexOf(n);
+      // Case-insensitive, whitespace-trimmed column lookup
+      const col = n => hdr.findIndex(h => String(h||"").trim().toLowerCase() === n.toLowerCase());
 
       let C;
       if (isCoastal) {
@@ -1403,7 +1408,7 @@ async function loadRecyclingOrdersFromSharePoint() {
         };
       }
 
-      for (let r = 2; r < rows.length; r++) {
+      for (let r = hdrIdx + 1; r < rows.length; r++) {
         const row = rows[r]; if (!row) continue;
         // Stop reading when ORDER CONFIRMATIONS SECTION marker found
         const descVal = String(row[C.desc] ?? "").trim();
