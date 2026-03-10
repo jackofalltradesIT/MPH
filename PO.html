@@ -460,8 +460,11 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="G&L Transport">G&L Transport</option>
             <option value="Triple C Express">Triple C Express</option>
             <option value="Other">Other</option>
-            <option value="CPU - Blind Shipment">CPU - Blind Shipment</option>
           </select>
+          <label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;">
+            <input type="checkbox" id="isBlindShipment" style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer;">
+            Blind Shipment
+          </label>
         </div>
       </div>
       <div class="field">
@@ -820,7 +823,7 @@ async function generatePO() {
     salesPerson: '',
     specialInstructions: document.getElementById('specialInstructions').value.trim(),
     isRevised: isRevised && !!revisedNum,
-    isBlind: document.getElementById('shipVia').value === 'CPU - Blind Shipment',
+    isBlind: document.getElementById('isBlindShipment').checked,
     vendor, lines, total
   };
 
