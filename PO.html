@@ -835,7 +835,7 @@ async function generatePO() {
       const qtyPriceListSell = lines.map(l => `Qty: ${l.qty||'--'}   Price: ${l.sell > 0 ? fmtCur(l.sell) : fmtCur(l.price)}`).join('\n');
       generatedEmails = [{
         to: vendor.contact || '',
-        subject: `${order.isRevised ? '[REVISED] ' : ''}MPH United PO ${mphPONum} -- ${customerName} | Ship ${order.shipDate}`,
+        subject: `${order.isRevised ? '[REVISED] ' : ''}MPH United PO ${mphPONum}${order.isBlind ? '' : ' -- ' + customerName} | Ship ${order.shipDate}`,
         body: 'Hello\n\nPlease find below Purchase Order ' + mphPONum + ' from MPH United.\n\nPRODUCTS ORDERED:\n' + descList + '\n\nShip Date: ' + order.shipDate + '\nShip Via: ' + order.shipVia + '\nMPH PO #: ' + mphPONum + (!order.isBlind ? '\nCustomer PO #: ' + order.customerPO : '') + '\n' + qtyPriceList + (!order.isBlind ? '\n\nSHIP TO: ' + order.customerName + '\n' + order.shipTo : '') + (order.specialInstructions ? '\n\nPO NOTES:\n' + order.specialInstructions : '') + '\n\n' + 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # ' + mphPONum + ' on all correspondence and shipping documents.',
         bodyHtml: buildVendorEmailHtml(order, vendor, lines, mphPONum)
       }, {
