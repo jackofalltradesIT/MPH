@@ -1367,55 +1367,57 @@ async function loadRecyclingOrdersFromSharePoint() {
       const ws   = wb.Sheets[sheetName];
       const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:"", raw:false, dateNF:"yyyy-mm-dd" });
       // Dynamically find header row (scan first 5 rows for "MPH PO"), same approach as MPH Orders
+      // cleanHdr strips Excel text-prefix apostrophes that openpyxl/SheetJS may include
+      const cleanHdr = h => String(h||"").replace(/^'+/, "").trim().toLowerCase();
       let hdrIdx = -1, hdr = [];
       for (let i = 0; i < Math.min(rows.length, 5); i++) {
-        const normalised = (rows[i] || []).map(h => String(h||"").trim().toLowerCase());
-        if (normalised.includes("mph po")) { hdrIdx = i; hdr = rows[i]; break; }
+        if ((rows[i] || []).some(h => cleanHdr(h) === "mph po")) { hdrIdx = i; hdr = rows[i]; break; }
       }
       if (hdrIdx < 0) continue;
       sheetsFound.push(sheetName);
 
       const isCoastal = sheetName === 'Coastal Container';
-      // Case-insensitive, whitespace-trimmed column lookup
-      const col = n => hdr.findIndex(h => String(h||"").trim().toLowerCase() === n.toLowerCase());
+      // Case-insensitive column lookup, strips leading apostrophes
+      const col = n => hdr.findIndex(h => cleanHdr(h) === n.toLowerCase());
 
       let C;
       if (isCoastal) {
-        // Coastal Container has a unique layout
+        // Coastal Container layout — "Buy"/"Sell" columns (user renamed from CSN pays MPH / MPH pays CCS)
         C = {
-          status:   col("Order Status"),     csr:      col("Sales Person/CSR"),
-          mph_po:   col("MPH PO"),           cust_po:  col("Customer PO"),
-          desc:     col("Description"),      qty:      col("Qty"),
-          ship_date:col("Ship Date"),        vendor:   col("Vendor"),
-          buy:      col("CSN pays MPH"),     sell:     col("MPH pays CCS"),
-          customer: col("Customer"),         ship_to:  col("Ship From"),
-          contacts: col("Customer Order Confirmation Contacts"),
-          po_notes: col("Invoice Notes"),
-          freight:  col("Freight"),  wanted_date: -1,   appt: -1
+          status:   col("order status"),     csr:      col("sales person/csr"),
+          mph_po:   col("mph po"),           cust_po:  col("customer po"),
+          desc:     col("description"),      qty:      col("qty"),
+          ship_date:col("ship date"),        vendor:   col("vendor"),
+          buy:      col("buy"),              sell:     col("sell"),
+          customer: col("customer"),         ship_to:  col("ship from"),
+          contacts: col("customer order confirmation contacts"),
+          po_notes: col("invoice notes"),
+          freight:  col("freight"),  wanted_date: -1,   appt: -1
         };
       } else {
         // Standard recycling layout (RRG, UGC, STS, SEC, GPC, 5 Star, Responsible Container)
         C = {
-          status:      col("Order Status"),                csr:      col("Sales Person/CSR"),
-          mph_po:      col("MPH PO"),                      cust_po:  col("Customer PO"),
-          desc:        col("Description"),                 qty:      col("Qty"),
-          ship_date:   col("Ship Date"),                   wanted_date: col("Delivery Date"),
-          appt:        col("Appt. Time"),                  vendor:   col("Vendor"),
-          buy:         col("BUY"),                         sell:     col("SELL"),
-          customer:    col("Customer"),                    ship_to:  col("Ship To or Pick Up Location"),
-          freight:     col("Freight"),                     contacts: -1,
-          po_notes:    col("PO Notes")
+          status:      col("order status"),                csr:      col("sales person/csr"),
+          mph_po:      col("mph po"),                      cust_po:  col("customer po"),
+          desc:        col("description"),                 qty:      col("qty"),
+          ship_date:   col("ship date"),                   wanted_date: col("delivery date"),
+          appt:        col("appt. time"),                  vendor:   col("vendor"),
+          buy:         col("buy"),                         sell:     col("sell"),
+          customer:    col("customer"),                    ship_to:  col("ship to or pick up location"),
+          freight:     col("freight"),                     contacts: -1,
+          po_notes:    col("po notes")
         };
       }
 
       for (let r = hdrIdx + 1; r < rows.length; r++) {
         const row = rows[r]; if (!row) continue;
         // Stop reading when ORDER CONFIRMATIONS SECTION marker found
-        const descVal = String(row[C.desc] ?? "").trim();
+        const descVal = String(row[C.desc] ?? "").replace(/^'+/, "").trim();
         if (descVal.toUpperCase().includes("ORDER CONFIRMATIONS")) break;
-        const status = String(row[C.status] ?? "").trim();
+        const status = String(row[C.status] ?? "").replace(/^'+/, "").trim();
         if (!status || !RECYCLING_STATUSES.has(status)) continue;
-        const g = k => (C[k] >= 0) ? String(row[C[k]] ?? "").trim() : "";
+        // Strip leading apostrophes from all cell values (Excel text-prefix formatting)
+        const g = k => (C[k] >= 0) ? String(row[C[k]] ?? "").replace(/^'+/, "").trim() : "";
         const o = {}; for (const k of Object.keys(C)) o[k] = g(k);
         o.sheet  = sheetName;
         o.source = 'recycling';
