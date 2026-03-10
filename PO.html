@@ -1386,7 +1386,7 @@ async function loadRecyclingOrdersFromSharePoint() {
           customer: col("Customer"),         ship_to:  col("Ship From"),
           contacts: col("Customer Order Confirmation Contacts"),
           po_notes: col("Invoice Notes"),
-          freight:  -1,  wanted_date: -1,   appt: -1
+          freight:  col("Freight"),  wanted_date: -1,   appt: -1
         };
       } else {
         // Standard recycling layout (RRG, UGC, STS, SEC, GPC, 5 Star, Responsible Container)
