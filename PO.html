@@ -531,19 +531,19 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
         <div class="po-paper" id="poPaper"></div>
       </div>
       <div class="output-panel" id="outPanel1">
-        <div class="po-actions"><button class="btn-action" id="copyV" onclick="copyEmail(0,'copyV')">Copy Email</button><button class="btn-action primary" onclick="openInOutlook(0)">✉ Open in Outlook</button></div>
+        <div class="po-actions"><button class="btn-action" id="copyV" onclick="copyEmail(0,'copyV')">📋 Copy HTML Body</button><button class="btn-action primary" onclick="openInOutlook(0)">✉ Open Email (then paste body)</button></div>
         <div class="email-preview" id="emailDiv0"></div>
       </div>
       <div class="output-panel" id="outPanel2">
-        <div class="po-actions"><button class="btn-action" id="copyC" onclick="copyEmail(1,'copyC')">Copy Email</button><button class="btn-action primary" onclick="openInOutlook(1)">✉ Open in Outlook</button></div>
+        <div class="po-actions"><button class="btn-action" id="copyC" onclick="copyEmail(1,'copyC')">📋 Copy HTML Body</button><button class="btn-action primary" onclick="openInOutlook(1)">✉ Open Email (then paste body)</button></div>
         <div class="email-preview" id="emailDiv1"></div>
       </div>
       <div class="output-panel" id="outPanel3">
-        <div class="po-actions"><button class="btn-action" id="copyC2" onclick="copyEmail(2,'copyC2')">Copy Email</button><button class="btn-action primary" onclick="openInOutlook(2)">✉ Open in Outlook</button></div>
+        <div class="po-actions"><button class="btn-action" id="copyC2" onclick="copyEmail(2,'copyC2')">📋 Copy HTML Body</button><button class="btn-action primary" onclick="openInOutlook(2)">✉ Open Email (then paste body)</button></div>
         <div class="email-preview" id="emailDiv2"></div>
       </div>
       <div class="output-panel" id="outPanel4">
-        <div class="po-actions"><button class="btn-action" id="copyC3" onclick="copyEmail(3,'copyC3')">Copy Email</button><button class="btn-action primary" onclick="openInOutlook(3)">✉ Open in Outlook</button></div>
+        <div class="po-actions"><button class="btn-action" id="copyC3" onclick="copyEmail(3,'copyC3')">📋 Copy HTML Body</button><button class="btn-action primary" onclick="openInOutlook(3)">✉ Open Email (then paste body)</button></div>
         <div class="email-preview" id="emailDiv3"></div>
       </div>
     </div>
@@ -1019,28 +1019,32 @@ function copyEmail(idx, btnId) {
   navigator.clipboard.write([new ClipboardItem({ 'text/html': blob, 'text/plain': plain })]);
   const btn = document.getElementById(btnId);
   btn.textContent='(ok) Copied!'; btn.classList.add('copied');
-  setTimeout(()=>{btn.textContent='Copy Email';btn.classList.remove('copied');},2000);
+  setTimeout(()=>{btn.textContent='📋 Copy HTML Body';btn.classList.remove('copied');},2000);
 }
 
-function openInOutlook(idx) {
+async function openInOutlook(idx) {
   const e = generatedEmails[idx];
   // Extract bare email address
   const emailMatch = e.to.match(/[\w.%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/);
   const toAddr = emailMatch ? emailMatch[0].trim() : '';
 
-  // Copy the HTML body to clipboard so the user can paste it into the compose window
+  // Copy the HTML body to clipboard FIRST (await so it completes before mailto fires)
   const htmlSrc = e.bodyHtml || e.body || '';
   const htmlBlob = new Blob([`<html><body>${htmlSrc}</body></html>`], { type: 'text/html' });
   const plainBlob = new Blob([htmlSrc.replace(/<[^>]*>/g,'')], { type: 'text/plain' });
-  navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': plainBlob })]);
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': plainBlob })]);
+  } catch(err) {
+    await navigator.clipboard.writeText(htmlSrc.replace(/<[^>]*>/g,''));
+  }
 
-  // Open mailto: — works on Mac & Windows, opens the default mail app (Outlook if set as default)
-  // with To and Subject pre-filled. Body is clipboard; user pastes it.
+  // Open mailto: with To and Subject pre-filled, then user pastes the body
   const mailto = 'mailto:' + encodeURIComponent(toAddr)
     + '?subject=' + encodeURIComponent(e.subject);
   window.location.href = mailto;
 
-  showToast('✉ HTML body copied — paste into the email body with Ctrl+V (Windows) or Cmd+V (Mac)');
+  // Show toast long enough for user to see it after Outlook opens (6 seconds)
+  showToast('✉ HTML body copied to clipboard — click in the email body and paste with Ctrl+V (Windows) or Cmd+V (Mac)', 6000);
 }
 
 function showToast(msg, duration) {
