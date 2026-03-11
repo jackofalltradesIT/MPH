@@ -1012,7 +1012,11 @@ function copyEl(id, btnId, reset) {
 
 function copyEmail(idx, btnId) {
   const e = generatedEmails[idx];
-  navigator.clipboard.writeText(`To: ${e.to}\nSubject: ${e.subject}\n\n${e.body}`);
+  const htmlSrc = e.bodyHtml || e.body || '';
+  const html = `<html><body>${htmlSrc}</body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const plain = new Blob([htmlSrc.replace(/<[^>]*>/g,'')], { type: 'text/plain' });
+  navigator.clipboard.write([new ClipboardItem({ 'text/html': blob, 'text/plain': plain })]);
   const btn = document.getElementById(btnId);
   btn.textContent='(ok) Copied!'; btn.classList.add('copied');
   setTimeout(()=>{btn.textContent='Copy Email';btn.classList.remove('copied');},2000);
@@ -1020,33 +1024,23 @@ function copyEmail(idx, btnId) {
 
 function openInOutlook(idx) {
   const e = generatedEmails[idx];
-  // Extract bare email address using a proper email pattern — avoids RFC 2822 issues
-  // caused by special chars in display names (commas, ampersands, etc.)
+  // Extract bare email address
   const emailMatch = e.to.match(/[\w.%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/);
   const toAddr = emailMatch ? emailMatch[0].trim() : '';
-  const toHeader = toAddr ? toAddr : '';
 
-  // Build a .eml file with HTML body.
-  // X-Unsent: 1 tells Outlook to open it as a new compose window (not a read window).
-  const htmlBody = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>' + e.bodyHtml + '</body></html>';
-  let headers = 'MIME-Version: 1.0\r\n';
-  headers += 'X-Unsent: 1\r\n';
-  if (toHeader) headers += 'To: ' + toHeader + '\r\n';
-  headers += 'Subject: ' + e.subject + '\r\n';
-  headers += 'Content-Type: text/html; charset=UTF-8\r\n';
-  headers += '\r\n';
+  // Copy the HTML body to clipboard so the user can paste it into the compose window
+  const htmlSrc = e.bodyHtml || e.body || '';
+  const htmlBlob = new Blob([`<html><body>${htmlSrc}</body></html>`], { type: 'text/html' });
+  const plainBlob = new Blob([htmlSrc.replace(/<[^>]*>/g,'')], { type: 'text/plain' });
+  navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': plainBlob })]);
 
-  const blob = new Blob([headers + htmlBody], {type: 'message/rfc822'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = e.subject.replace(/[^\w\s\-]/g, '').trim().substring(0, 80) + '.eml';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  // Open mailto: — works on Mac & Windows, opens the default mail app (Outlook if set as default)
+  // with To and Subject pre-filled. Body is clipboard; user pastes it.
+  const mailto = 'mailto:' + encodeURIComponent(toAddr)
+    + '?subject=' + encodeURIComponent(e.subject);
+  window.location.href = mailto;
 
-  showToast('EML downloaded — double-click the file to open as HTML email in Outlook');
+  showToast('✉ HTML body copied — paste into the email body with Ctrl+V (Windows) or Cmd+V (Mac)');
 }
 
 function showToast(msg, duration) {
