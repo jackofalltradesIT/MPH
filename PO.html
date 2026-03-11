@@ -373,7 +373,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
           <input type="text" id="customerPO" placeholder="e.g. 13528">
         </div>
         <div class="field">
-          <label>Order Date</label>
+          <label>PO Order Date</label>
           <input type="date" id="orderDate">
         </div>
       </div>
@@ -890,7 +890,6 @@ function renderPO(o) {
       <div class="po-meta-box"><div class="po-meta-label">Ship Via</div><div class="po-meta-value">${o.shipVia}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Appt. Time</div><div class="po-meta-value">${o.apptTime||'--'}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Sales Order #</div><div class="po-meta-value">${o.salesOrder||'--'}</div></div>
-      <div class="po-meta-box"><div class="po-meta-label">Dock Hours</div><div class="po-meta-value" style="font-size:10px">${o.vendor.dockHours}</div></div>
     </div>
     <table class="po-table">
       <thead><tr><th>Product / Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
@@ -1897,7 +1896,6 @@ function renderWashReturnPO(orders, vendor, poNum) {
     <div class="po-meta-box"><div class="po-meta-label">Vendor</div><div class="po-meta-value">${escHtml(vendor.name)}<br><span style="font-size:10px;color:var(--ink2)">${escHtml(vendor.address||'').replace(/\n/g,'<br>')}</span><br><span style="font-size:10px;color:var(--ink2)">${escHtml(vendor.contact||'')} -- ${escHtml(vendor.phone||'')}</span></div></div>
     <div class="po-meta-box"><div class="po-meta-label">Ship Via</div><div class="po-meta-value">CPU — Wash &amp; Return</div></div>
     <div class="po-meta-box"><div class="po-meta-label">MPH PO #</div><div class="po-meta-value">${poNum}</div></div>
-    <div class="po-meta-box"><div class="po-meta-label">Dock Hours</div><div class="po-meta-value" style="font-size:10px">${escHtml(vendor.dockHours||'--')}</div></div>
   </div>
   ${sectionsHtml}
   <div class="po-sig"><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Authorized -- MPH United</div></div><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Vendor Acknowledgement</div></div></div>`;
