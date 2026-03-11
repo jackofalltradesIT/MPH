@@ -515,6 +515,12 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       <div class="sub" id="loadingSub">Please wait</div>
     </div>
     <div class="po-document" id="poDocument">
+      <div style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;">
+        <strong>📋 How to send the Vendor Email with PO attached:</strong><br>
+        <strong>1.</strong> Click <em>Save PO PDF</em> and save the PO to a folder on your computer.<br>
+        <strong>2.</strong> Click <em>Vendor Email</em>, then click <em>Copy HTML Body</em> to copy the email content.<br>
+        <strong>3.</strong> Click <em>Open Email</em>, paste into the body of the email, then manually attach the saved PDF.
+      </div>
       <div class="output-tabs">
         <button class="output-tab active" onclick="switchTab(0,this)">📄 PO Document</button>
         <button class="output-tab" onclick="switchTab(1,this)">📧 Vendor Email</button>
@@ -524,7 +530,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       </div>
       <div class="output-panel active" id="outPanel0">
         <div class="po-actions">
-          <button class="btn-action primary" onclick="printPO()">🖨 Print / Save PDF</button>
+          <button class="btn-action primary" onclick="printPO()">🖨 Save PO PDF</button>
           <button class="btn-action" id="copyPOBtn" onclick="copyEl('poPaper','copyPOBtn','Copy PO')">Copy PO Text</button>
           <button class="btn-action" onclick="generatePO()">↺ Regenerate</button>
         </div>
@@ -532,6 +538,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       </div>
       <div class="output-panel" id="outPanel1">
         <div class="po-actions"><button class="btn-action" id="copyV" onclick="copyEmail(0,'copyV')">📋 Copy HTML Body</button><button class="btn-action primary" onclick="openInOutlook(0)">✉ Open Email (then paste body)</button></div>
+        <div style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 To attach the PO, save the PDF first, then attach it manually to the email.</div>
         <div class="email-preview" id="emailDiv0"></div>
       </div>
       <div class="output-panel" id="outPanel2">
