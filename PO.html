@@ -289,6 +289,13 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     </div>
     <button class="btn-close-import" onclick="closeImport()">✕ Close</button>
   </div>
+  <div style="background:#eaf4ee;border-bottom:1px solid #7abf95;padding:10px 28px;font-size:12.5px;color:#1a4a2e;line-height:1.75;">
+    <strong>📋 How to Import Orders:</strong>&nbsp;&nbsp;
+    <strong>1)</strong> For single orders, click the order and then click <em>Load into PO Builder</em>.&nbsp;&nbsp;
+    <strong>2)</strong> For split orders, click all the orders and then click <em>Load as Split Load</em>.&nbsp;&nbsp;
+    <strong>3)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
+    <strong>4)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
+  </div>
   <div class="import-body">
     <div class="import-controls">
       <!-- Source Toggle -->
@@ -514,11 +521,19 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       <div class="sub" id="loadingSub">Please wait</div>
     </div>
     <div class="po-document" id="poDocument">
-      <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;">
-        <strong>📋 How to send the Vendor Email with PO attached:</strong><br>
-        <strong>1.</strong> Click <em>Save PO PDF</em> and save the PO to a folder on your computer.<br>
-        <strong>2.</strong> Click <em>Vendor Email</em>, then click <em>Copy HTML Body</em> to copy the email content.<br>
-        <strong>3.</strong> Click <em>Open Email</em>, paste into the body of the email, then manually attach the saved PDF.
+      <div class="no-print" style="display:flex;gap:10px;margin-bottom:14px;align-items:stretch;">
+        <div style="flex:1;background:#eaf4ee;border:1px solid #7abf95;border-radius:8px;padding:12px 16px;font-size:13px;color:#1a4a2e;line-height:1.7;">
+          <strong>📂 How to Import PO Requests:</strong><br>
+          <strong>1.</strong> Click <em>Import PO Requests from Excel</em>.<br>
+          <strong>2.</strong> After importing orders, check all the fields and then click <em>Generate PO</em> at the bottom.<br>
+          <strong>3.</strong> If you are Revising a PO or have a Blind Shipment, make sure to check the boxes.
+        </div>
+        <div style="flex:1;background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;font-size:13px;color:#5a4a00;line-height:1.7;">
+          <strong>📋 How to send the Vendor Email with PO attached:</strong><br>
+          <strong>1.</strong> Click <em>Save PO PDF</em> and save the PO to a folder on your computer.<br>
+          <strong>2.</strong> Click <em>Vendor Email</em>, then click <em>Copy HTML Body</em> to copy the email content.<br>
+          <strong>3.</strong> Click <em>Open Email</em>, paste into the body of the email, then attach the saved PDF.
+        </div>
       </div>
       <div class="output-tabs">
         <button class="output-tab active" onclick="switchTab(0,this)">📄 PO Document</button>
