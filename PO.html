@@ -322,10 +322,9 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     </div>
   </div>
   <div class="import-footer">
-    <div class="import-footer-hint" id="importFooterHint">Select 1 row to load • Select up to 4 rows for Split Loads • Select 3 rows for Wash &amp; Return</div>
+    <div class="import-footer-hint" id="importFooterHint">Select 1 row to load • Select up to 4 rows for Split Loads</div>
     <div style="display:flex;gap:8px;">
       <button class="btn-load-order" id="btnLoadSplit" onclick="loadAsSplitLoad()" disabled style="background:var(--green);display:none;">⚡ Load as Split Load →</button>
-      <button class="btn-load-order" id="btnLoadWR" onclick="loadAsWashReturn()" disabled style="background:#1a3a6e;display:none;">♻ Wash &amp; Return →</button>
       <button class="btn-load-order" id="btnLoadOrder" onclick="loadSelectedOrder()" disabled>Load into PO Builder →</button>
     </div>
   </div>
@@ -474,7 +473,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       </div>
       <div class="field">
         <label>Appt. Time</label>
-        <input type="text" id="apptTime" placeholder="e.g. 8:00am">
+        <textarea id="apptTime" placeholder="e.g. 8:00am" rows="2" style="resize:vertical;font-size:13px;padding:6px 8px;width:100%;border:1px solid var(--border);border-radius:4px;background:var(--cream);font-family:inherit;"></textarea>
       </div>
 
     </div>
@@ -725,8 +724,7 @@ function loadVendor() {
     `<strong>Address:</strong> ${v.address.replace(/\n/g,'<br>')}<br>` +
     `<strong>Contact:</strong> ${v.contact} -- ${v.phone}<br>` +
     (v.email ? `<strong>Email:</strong> ${v.email}<br>` : '') +
-    `<strong>Dock:</strong> ${v.dockHours}<br>` +
-    `<strong>Lead/Tech:</strong> ${v.leadContact}<br>` +
+    `<strong>Dock:</strong> ${v.dockHours}<br>`;
   document.getElementById('vendorCard').classList.add('active');
 
   const coreVendor = isCore(key);
@@ -828,7 +826,7 @@ async function generatePO() {
     customerEmail: document.getElementById('customerEmail').value.trim(),
     shipDate: fmtDate(document.getElementById('shipDate').value),
     shipVia: document.getElementById('shipVia').value,
-    eta: document.getElementById('etaDate').value.trim(),
+    eta: fmtDate(document.getElementById('etaDate').value),
     apptTime: document.getElementById('apptTime').value.trim(),
     partNumber: document.getElementById('partNumber').value.trim(),
     salesOrder: document.getElementById('salesOrder').value.trim(),
@@ -895,7 +893,7 @@ function renderPO(o) {
       ${!o.isBlind ? `<div class="po-meta-box"><div class="po-meta-label">Customer PO #</div><div class="po-meta-value">${o.customerPO}</div></div>` : ''}
       <div class="po-meta-box"><div class="po-meta-label">Required Ship Date</div><div class="po-meta-value">${o.shipDate}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Ship Via</div><div class="po-meta-value">${o.shipVia}</div></div>
-      <div class="po-meta-box"><div class="po-meta-label">Appt. Time</div><div class="po-meta-value">${o.apptTime||'--'}</div></div>
+      <div class="po-meta-box"><div class="po-meta-label">Appt. Time</div><div class="po-meta-value">${o.apptTime ? o.apptTime.replace(/\r\n|\r|\n/g,'<br>') : '--'}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Sales Order #</div><div class="po-meta-value">${o.salesOrder||'--'}</div></div>
     </div>
     <table class="po-table">
@@ -1090,7 +1088,6 @@ function showToast(msg, duration) {
     <div class="field"><label>Phone</label><input type="text" id="nv_phone"></div>
     <div class="field"><label>Email</label><input type="email" id="nv_email"></div>
     <div class="field"><label>Dock Hours / Instructions</label><textarea id="nv_dock"></textarea></div>
-    <div class="field"><label>Lead Contact</label><input type="text" id="nv_lead"></div>
     <div class="field"><label>Products (one per line)</label><textarea id="nv_products" placeholder="IBC 275 Gal&#10;IBC 330 Gal"></textarea></div>
     <div class="modal-btns">
       <button class="btn-modal-cancel" onclick="closeModal('vendorModal')">Cancel</button>
@@ -1119,13 +1116,13 @@ function saveNewVendor(){
   var prods=document.getElementById('nv_products').value.trim();
   var products=prods?prods.split('\n').filter(function(p){return p.trim();}).map(function(p){return {desc:p.trim(),price:''};}):[{desc:'Product',price:''}];
   var key='custom_'+Date.now();
-  VENDORS[key]={name:name,address:document.getElementById('nv_address').value.trim(),contact:document.getElementById('nv_contact').value.trim()||'Contact',phone:document.getElementById('nv_phone').value.trim()||'--',email:document.getElementById('nv_email').value.trim(),dockHours:document.getElementById('nv_dock').value.trim()||'--',leadContact:document.getElementById('nv_lead').value.trim()||'--',products:products};
+  VENDORS[key]={name:name,address:document.getElementById('nv_address').value.trim(),contact:document.getElementById('nv_contact').value.trim()||'Contact',phone:document.getElementById('nv_phone').value.trim()||'--',email:document.getElementById('nv_email').value.trim(),dockHours:document.getElementById('nv_dock').value.trim()||'--',products:products};
   var sel=document.getElementById('vendorSelect');
   var grp=document.getElementById('customVendorGroup');
   if(!grp){grp=document.createElement('optgroup');grp.label='Custom Added';grp.id='customVendorGroup';sel.appendChild(grp);}
   var opt=document.createElement('option');opt.value=key;opt.textContent=name+' (custom)';grp.appendChild(opt);
   sel.value=key;loadVendor();
-  ['nv_name','nv_address','nv_contact','nv_phone','nv_email','nv_dock','nv_lead','nv_products'].forEach(function(id){document.getElementById(id).value='';});
+  ['nv_name','nv_address','nv_contact','nv_phone','nv_email','nv_dock','nv_products'].forEach(function(id){document.getElementById(id).value='';});
   closeModal('vendorModal');
 }
 
@@ -1347,8 +1344,6 @@ function switchImportSource(src) {
   document.getElementById("btnLoadOrder").disabled  = true;
   document.getElementById("btnLoadSplit").style.display = "none";
   document.getElementById("btnLoadSplit").disabled  = true;
-  document.getElementById("btnLoadWR").style.display = "none";
-  document.getElementById("btnLoadWR").disabled  = true;
   const vf = document.getElementById("filterVendorSheet");
   vf.innerHTML = '<option value="">All Vendors</option>'; vf.disabled = true;
   document.getElementById("importSearch").value = ""; document.getElementById("importSearch").disabled = true;
@@ -1528,9 +1523,7 @@ function filterImportTable() {
   document.getElementById("btnLoadOrder").disabled = true;
   document.getElementById("btnLoadSplit").style.display = "none";
   document.getElementById("btnLoadSplit").disabled = true;
-  document.getElementById("btnLoadWR").style.display = "none";
-  document.getElementById("btnLoadWR").disabled = true;
-  document.getElementById("importFooterHint").textContent = "Select 1 row to load • Select up to 4 rows for Split Loads • Select 3 rows for Wash & Return";
+  document.getElementById("importFooterHint").textContent = "Select 1 row to load • Select up to 4 rows for Split Loads";
   renderImportTable();
 }
 
@@ -1636,15 +1629,13 @@ function selectImportRow(i) {
 function updateImportFooter() {
   const btnLoad = document.getElementById("btnLoadOrder");
   const btnSplit = document.getElementById("btnLoadSplit");
-  const btnWR = document.getElementById("btnLoadWR");
   const hint = document.getElementById("importFooterHint");
   const selIdxs = [importSelectedIdx, importSelectedIdx2, importSelectedIdx3, importSelectedIdx4].filter(i => i !== null);
   const count = selIdxs.length;
   if (count === 0) {
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
-    btnWR.style.display = "none"; btnWR.disabled = true;
-    hint.textContent = "Select 1 row to load • Select up to 4 rows for Split Loads • Select 3 rows for Wash & Return";
+    hint.textContent = "Select 1 row to load • Select up to 4 rows for Split Loads";
     return;
   }
   const names = selIdxs.map(i => importFiltered[i].customer).join("  +  ");
@@ -1652,27 +1643,20 @@ function updateImportFooter() {
   if (count === 1) {
     btnLoad.disabled = false;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
-    btnWR.style.display = "none"; btnWR.disabled = true;
     const d = o1.desc||"";
     hint.textContent = "Selected: " + o1.customer + " — " + d.slice(0,55) + (d.length>55?"…":"") + " • Click more rows for Split Load";
   } else {
     // 2, 3, or 4 — always enable Split Load
     btnLoad.disabled = true;
     btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
-    if (count === 3) {
-      // W&R only available at exactly 3
-      btnWR.style.display = "inline-block"; btnWR.disabled = false;
-      hint.textContent = "⚡ Split Load (" + count + "): " + names + "  •  Or use ♻ Wash & Return";
-    } else {
-      btnWR.style.display = "none"; btnWR.disabled = true;
-      hint.textContent = "⚡ Split Load (" + count + "): " + names + (count < 4 ? " • Click another row to add (max 4)" : "");
-    }
+    hint.textContent = "⚡ Split Load (" + count + "): " + names + (count < 4 ? " • Click another row to add (max 4)" : "");
   }
 }
 
 function loadSelectedOrder() {
   if (importSelectedIdx === null) return;
   const o = importFiltered[importSelectedIdx];
+  document.getElementById("isBlindShipment").checked = false;
   document.getElementById("customerSearch").value = o.customer||"";
   document.getElementById("selectedCustomerName").value = o.customer||"";
   const cm = CUSTOMERS.find(c => c.name.toLowerCase() === (o.customer||"").toLowerCase());
@@ -1727,6 +1711,7 @@ function loadAsSplitLoad() {
   const rawOrders = selIdxs.map(i => importFiltered[i]);
   const o1 = rawOrders[0];
   const pp = s => { const m=(s||"").match(/[\d.]+/); return m?m[0]:""; };
+  document.getElementById("isBlindShipment").checked = false;
 
   // Customer / contact from first order
   document.getElementById("customerSearch").value = o1.customer||"";
@@ -1752,9 +1737,13 @@ function loadAsSplitLoad() {
   if (o1.wanted_date) document.getElementById("etaDate").value = o1.wanted_date.split("T")[0];
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
-  // Notes: label as SPLIT LOAD + collect all non-empty notes
-  const allNotes = ["SPLIT LOAD"].concat(rawOrders.map(o => o.po_notes).filter(Boolean));
-  document.getElementById("specialInstructions").value = [...new Set(allNotes)].join("\n\n");
+  // Notes: label as SPLIT LOAD + collect all non-empty notes labeled by load number
+  const labeledNotes = rawOrders.map((o, idx) => {
+    const note = (o.po_notes || "").trim();
+    return note ? "Split Load " + (idx + 1) + ": " + note : null;
+  }).filter(Boolean);
+  const splitNotesText = labeledNotes.length > 0 ? "SPLIT LOAD\n\n" + labeledNotes.join("\n\n") : "SPLIT LOAD";
+  document.getElementById("specialInstructions").value = splitNotesText;
 
   // Vendor from first order
   const vk = matchVendorKey(o1.vendor, o1.sheet);
