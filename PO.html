@@ -817,9 +817,46 @@ function getSignedInInitials() {
   } catch(e) {}
   return '';
 }
-function genPONum() {
+async function genPONum() {
   const initials = getSignedInInitials();
   const prefix = initials ? initials + '-' : '';
+
+  // Try SharePoint shared counter (up to 5 attempts with ETag retry for race conditions)
+  const token = await getToken();
+  if (token) {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        // GET the first item from POSettings list, including its ETag for concurrency control
+        const listPath = `/sites/${SPO_SITE_PATH}/lists/POSettings/items?$expand=fields&$top=1`;
+        const data = await graphGet(listPath);
+        const item = data.value && data.value[0];
+        if (!item) break; // list is empty — fall through to localStorage
+
+        const currentNum = parseInt(item.fields.NextPONumber || '14999', 10);
+        const nextNum    = currentNum + 1;
+        const etag       = item['@odata.etag'];
+
+        // PATCH with ETag — if another user grabbed the number first, SharePoint returns 412
+        const status = await graphPatch(
+          `/sites/${SPO_SITE_PATH}/lists/POSettings/items/${item.id}/fields`,
+          { NextPONumber: nextNum },
+          etag
+        );
+
+        if (status === 200 || status === 204) {
+          // Success — we own this number
+          return `${prefix}MPH${nextNum}`;
+        }
+        // 412 conflict: someone else grabbed it — wait briefly and retry
+        await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
+      } catch(e) {
+        if (attempt === 4) console.warn("SharePoint PO counter failed, using local fallback:", e);
+        else await new Promise(r => setTimeout(r, 100));
+      }
+    }
+  }
+
+  // Fallback: localStorage counter (used when offline or not signed in)
   const current = parseInt(localStorage.getItem('mph_po_counter') || '14999', 10);
   const next = current + 1;
   localStorage.setItem('mph_po_counter', String(next));
@@ -857,7 +894,7 @@ async function generatePO() {
   const total = lines.reduce((s,l) => s+(l.qty*l.price), 0);
   const isRevised = document.getElementById('isRevised').checked;
   const revisedNum = document.getElementById('revisedPONum').value.trim();
-  mphPONum = (isRevised && revisedNum) ? revisedNum : genPONum();
+  mphPONum = (isRevised && revisedNum) ? revisedNum : await genPONum();
 
   const order = {
     customerName,
@@ -945,7 +982,7 @@ function renderPO(o) {
       <tfoot><tr><td colspan="3" class="total-label">Order Total</td><td class="total-val">${o.total>0?fmtCur(o.total):'TBD'}</td></tr></tfoot>
     </table>
     ${o.specialInstructions?`<div class="po-notes"><div class="po-notes-label">Special Instructions</div><div class="po-notes-text">${escHtml(o.specialInstructions).replace(/\n/g,'<br>')}</div></div>`:''}
-    <div class="po-sig"><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Vendor Acknowledgement</div></div></div>`;
+`;
 }
 
 function buildVendorEmailHtml(o, v, ls, poNum) {
@@ -1185,8 +1222,9 @@ const MSAL_CONFIG = {
   cache: { cacheLocation: "sessionStorage" }
 };
 
-const GRAPH_SCOPES  = ["Files.Read.All", "Sites.Read.All"];
+const GRAPH_SCOPES  = ["Files.Read.All", "Sites.Read.All", "Sites.ReadWrite.All"];
 const DRIVE_ID      = "b!N48Wq05iEEOzX1swiNCEk8EKL-4bQeBMn0eOwmpi5atLWWczvFYQQrxH9feF-RUh";
+const SPO_SITE_PATH = "mphunited.sharepoint.com:/sites/MPHCSRsandAccounting:";
 const FILE_NAME     = "MPH Orders.xlsm";
 // NOTE: RECYCLING_DRIVE_ID uses the same SharePoint drive as MPH Orders.
 // If the Recycling file is in a different library, update RECYCLING_DRIVE_ID below.
@@ -1280,6 +1318,20 @@ async function graphGet(path, binary) {
   });
   if (!r.ok) throw new Error("Graph " + r.status);
   return binary ? r.arrayBuffer() : r.json();
+}
+
+async function graphPatch(path, body, etag) {
+  const token = await getToken();
+  if (!token) throw new Error("not_signed_in");
+  const headers = {
+    "Authorization": "Bearer " + token,
+    "Content-Type": "application/json",
+    "If-Match": etag   // ETag required for optimistic concurrency — 412 = conflict, retry
+  };
+  const r = await fetch("https://graph.microsoft.com/v1.0" + path, {
+    method: "PATCH", headers, body: JSON.stringify(body)
+  });
+  return r.status; // 200/204 = success, 412 = conflict (caller retries)
 }
 
 // ── LOAD ORDERS ───────────────────────────────────────────────────────────
@@ -1834,7 +1886,7 @@ function loadAsSplitLoad() {
 
 // ── WASH & RETURN PROGRAM ─────────────────────────────────────────────────
 
-function loadAsWashReturn() {
+async function loadAsWashReturn() {
   if (importSelectedIdx === null || importSelectedIdx2 === null || importSelectedIdx3 === null) return;
   const rawOrders = [
     importFiltered[importSelectedIdx],
@@ -1848,7 +1900,7 @@ function loadAsWashReturn() {
   const vendor = vk ? VENDORS[vk] : null;
   if (!vendor) { alert("Could not match a vendor for this Wash & Return order. Please verify the vendor on order 1."); return; }
 
-  mphPONum = genPONum();
+  mphPONum = await genPONum();
 
   // Build structured order objects
   const orders = rawOrders.map(o => ({
@@ -1948,7 +2000,7 @@ function renderWashReturnPO(orders, vendor, poNum) {
     <div class="po-meta-box"><div class="po-meta-label">MPH PO #</div><div class="po-meta-value">${poNum}</div></div>
   </div>
   ${sectionsHtml}
-  <div class="po-sig"><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Authorized -- MPH United</div></div><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Vendor Acknowledgement</div></div></div>`;
+`;
 }
 
 function buildWRVendorEmailHtml(orders, vendor, poNum) {
