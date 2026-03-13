@@ -964,9 +964,9 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     return r;
   }).join('');
   var h = '<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
-  h += '<p style="margin:0 0 12px;">Hello,</p>';
-  h += '<p style="margin:0 0 20px;">Please find below Purchase Order <strong>' + poNum + '</strong> from MPH United.</p>';
-  h += '<p style="margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
+  h += '<p style="line-height:1.6;margin:0 0 12px;">Hello,</p>';
+  h += '<p style="line-height:1.6;margin:0 0 20px;">Please find below Purchase Order <strong>' + poNum + '</strong> from MPH United.</p>';
+  h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
   h += '<table width="600" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;">';
   h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
   h += '<th style="padding:8px 10px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;">Description</th>';
@@ -980,9 +980,9 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
   if (!o.isBlind) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO #</td><td style="padding:4px 0;">' + escHtml(o.customerPO) + '</td></tr>';
   h += '</table>';
-  if (!o.isBlind) h += '<p style="margin:0 0 16px;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p>';
+  if (!o.isBlind) h += '<p style="line-height:1.6;margin:0 0 16px;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p>';
   if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:16px;font-size:13px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
-  h += '<p style="margin:20px 0 0;font-size:13px;">Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
+  h += '<p style="line-height:1.6;margin:20px 0 0;font-size:13px;">Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
   return h;
 }
@@ -1002,9 +1002,9 @@ function buildCustomerEmailHtml(o, v, ls, poNum) {
   }).join('');
   var isCPU = o.shipVia && o.shipVia.indexOf('CPU') !== -1;
   var h = '<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
-  h += '<p style="margin:0 0 12px;">Hello,</p>';
-  h += '<p style="margin:0 0 20px;">Thank you for this order. We have confirmed your shipping details as follows:</p>';
-  h += '<p style="margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Order Details</p>';
+  h += '<p style="line-height:1.6;margin:0 0 12px;">Hello,</p>';
+  h += '<p style="line-height:1.6;margin:0 0 20px;">Thank you for this order. We have confirmed your shipping details as follows:</p>';
+  h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Order Details</p>';
   h += '<table width="600" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;">';
   h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
   h += '<th style="padding:8px 10px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;">Description</th>';
@@ -1015,21 +1015,21 @@ function buildCustomerEmailHtml(o, v, ls, poNum) {
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO</td><td style="padding:4px 0;">' + escHtml(o.customerPO) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:4px 0;">' + escHtml(o.shipDate) + '</td></tr>';
-  if (!isCPU && o.eta) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">ETA Delivery Date</td><td style="padding:4px 0;">' + escHtml(o.eta) + '</td></tr>';
+  if (!isCPU && o.eta && o.eta !== '--' && o.eta !== '—') h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">ETA Delivery Date</td><td style="padding:4px 0;">' + escHtml(o.eta) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Payment Terms</td><td style="padding:4px 0;">Net 30</td></tr>';
   h += '</table>';
-  h += '<p style="margin:0 0 16px;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p>';
+  h += '<p style="line-height:1.6;margin:0 0 16px;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p>';
   if (isCPU) {
-    h += '<p style="margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">CPU Pickup Information</p>';
-    h += '<p style="margin:0 0 16px;font-size:13px;">If you are picking up your load, please contact the shipping area at the following plant below to schedule your appointment prior to going on for it. Though it\'s not common, we may have unforeseen issues that happen overnight that could negatively impact the timely shipment of your load. We ask that you have the carrier contact the plant the morning of the scheduled pick up to make sure it is still ready to go to avoid TONU charges.</p>';
+    h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">CPU Pickup Information</p>';
+    h += '<p style="line-height:1.6;margin:0 0 16px;font-size:13px;">If you are picking up your load, please contact the shipping area at the following plant below to schedule your appointment prior to going on for it. Though it\'s not common, we may have unforeseen issues that happen overnight that could negatively impact the timely shipment of your load. We ask that you have the carrier contact the plant the morning of the scheduled pick up to make sure it is still ready to go to avoid TONU charges.</p>';
     h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:13px;">';
     if (v.name) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Vendor</td><td style="padding:4px 0;">' + escHtml(v.name) + '</td></tr>';
     if (v.address) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Address</td><td style="padding:4px 0;">' + escHtml(v.address).replace(/\n/g,'<br>') + '</td></tr>';
     if (v.dockHours) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Dock Hours</td><td style="padding:4px 0;">' + escHtml(v.dockHours) + '</td></tr>';
     h += '</table>';
   }
-  h += '<p style="margin:0 0 16px;font-size:13px;">Please do not hesitate to reach out with any questions.</p>';
+  h += '<p style="line-height:1.6;margin:0 0 16px;font-size:13px;">Please do not hesitate to reach out with any questions.</p>';
   h += '</td></tr></table>';
   return h;
 }
@@ -1586,7 +1586,7 @@ function statusPillClass(s) {
 function fmtDate(d) {
   if (!d) return "—";
   const p = d.split("-");
-  return p.length === 3 ? p[1]+"/"+p[2]+"/"+p[0].slice(2) : d;
+  return p.length === 3 ? p[1]+"/"+p[2]+"/"+p[0] : d;
 }
 
 function renderImportTable() {
@@ -1705,6 +1705,9 @@ function loadSelectedOrder() {
   if (importSelectedIdx === null) return;
   const o = importFiltered[importSelectedIdx];
   document.getElementById("isBlindShipment").checked = false;
+  document.getElementById("isRevised").checked = false;
+  document.getElementById("revisedPOField").style.display = "none";
+  document.getElementById("revisedPONum").value = "";
   document.getElementById("customerSearch").value = o.customer||"";
   document.getElementById("selectedCustomerName").value = o.customer||"";
   const cm = CUSTOMERS.find(c => c.name.toLowerCase() === (o.customer||"").toLowerCase());
@@ -1760,6 +1763,9 @@ function loadAsSplitLoad() {
   const o1 = rawOrders[0];
   const pp = s => { const m=(s||"").match(/[\d.]+/); return m?m[0]:""; };
   document.getElementById("isBlindShipment").checked = false;
+  document.getElementById("isRevised").checked = false;
+  document.getElementById("revisedPOField").style.display = "none";
+  document.getElementById("revisedPONum").value = "";
 
   // Customer / contact from first order
   document.getElementById("customerSearch").value = o1.customer||"";
@@ -1947,8 +1953,8 @@ function renderWashReturnPO(orders, vendor, poNum) {
 
 function buildWRVendorEmailHtml(orders, vendor, poNum) {
   var h = '<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
-  h += '<p style="margin:0 0 12px;">Hello,</p>';
-  h += '<p style="margin:0 0 20px;">Please find below Purchase Order <strong>' + poNum + '</strong> from MPH United for the <strong>Wash &amp; Return Program</strong>.</p>';
+  h += '<p style="line-height:1.6;margin:0 0 12px;">Hello,</p>';
+  h += '<p style="line-height:1.6;margin:0 0 20px;">Please find below Purchase Order <strong>' + poNum + '</strong> from MPH United for the <strong>Wash &amp; Return Program</strong>.</p>';
 
   orders.forEach(function(o, idx) {
     var rows = o.lines.map(function(l) {
@@ -1966,7 +1972,7 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
       return r;
     }).join('');
 
-    h += '<p style="margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Order ' + (idx+1) + ' — ' + escHtml(o.customerName) + '</p>';
+    h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Order ' + (idx+1) + ' — ' + escHtml(o.customerName) + '</p>';
     h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:10px;font-size:13px;">';
     h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO</td><td style="padding:3px 0;">' + escHtml(o.customerPO) + '</td></tr>';
     h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:3px 0;">' + escHtml(o.shipDate) + '</td></tr>';
@@ -1986,7 +1992,7 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">CPU — Wash &amp; Return</td></tr>';
   h += '</table>';
-  h += '<p style="margin:20px 0 0;font-size:13px;">Please confirm receipt of this PO and provide expected ship dates at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
+  h += '<p style="line-height:1.6;margin:20px 0 0;font-size:13px;">Please confirm receipt of this PO and provide expected ship dates at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
   return h;
 }
