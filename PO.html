@@ -935,7 +935,7 @@ function renderPO(o) {
       <tfoot><tr><td colspan="3" class="total-label">Order Total</td><td class="total-val">${o.total>0?fmtCur(o.total):'TBD'}</td></tr></tfoot>
     </table>
     ${o.specialInstructions?`<div class="po-notes"><div class="po-notes-label">Special Instructions</div><div class="po-notes-text">${escHtml(o.specialInstructions).replace(/\n/g,'<br>')}</div></div>`:''}
-    <div class="po-sig"><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Authorized -- MPH United</div></div><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Vendor Acknowledgement</div></div></div>`;
+    <div class="po-sig"><div class="sig-block"><div class="sig-line"></div><div class="sig-label">Vendor Acknowledgement</div></div></div>`;
 }
 
 function buildVendorEmailHtml(o, v, ls, poNum) {
@@ -1066,10 +1066,10 @@ async function openInOutlook(idx) {
   const e = generatedEmails[idx];
   // Extract all bare email addresses from To field
   const toMatches = (e.to || '').match(/[\w.%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/g) || [];
-  const toAddr = toMatches.join(',');
+  const toAddr = toMatches.join(';');
   // Extract all bare email addresses from CC field
   const ccMatches = (e.cc || '').match(/[\w.%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/g) || [];
-  const ccAddr = ccMatches.join(',');
+  const ccAddr = ccMatches.join(';');
 
   // Copy the HTML body to clipboard FIRST (await so it completes before mailto fires)
   const htmlSrc = e.bodyHtml || e.body || '';
